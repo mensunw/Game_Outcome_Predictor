@@ -1,0 +1,3 @@
+match_id,time,avg_summoner_lvl_team_1,avg_match_history_length_team_1,avg_win_rate_team_1,sum_champ_mastery_team_1,avg_summoner_lvl_team_2,avg_match_history_length_team_2,avg_win_rate_team_2,sum_champ_mastery_team_2,winner
+NA1_5024880870,2024-08-23 03:07:20.228438,318.8,20.0,0.49,244155,416.2,20.0,0.5,179987,1
+NA1_5088501690,2024-08-23 03:11:34.193182,640.8,20.0,0.64,558657,340.6,20.0,0.49,292597,2
