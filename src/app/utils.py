@@ -1,13 +1,88 @@
-# IMPORTS
+### IMPORTS
 
+import importlib
+import os
+import requests
+import time
+import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Semaphore
+import threading
+from datetime import datetime
+from typing import NamedTuple
+import pandas as pd
+import config
+importlib.reload(config)
+from app import lib
+importlib.reload(lib)
 
+### GLOBAL VARIABLES
 
-# GLOBAL VARIABLES
+CSV_FILE = "./data/game_data.csv" #test_data.csv
+MATCH_ID_FILE = "./data/match_ids.csv" # test_ids.csv
 
+OVERRIDE_AND_CREATE_NEW_DATA = config.override_and_create_new_data
 
+# Knobs for grabbing data
+SAMPLE_SIZE_SCALE = 10 # X for each rank & division (X*3*4*3), (X*num_sample_ranks*divisions*num_for_each_player)
+NUM_SAMPLE_FOR_EACH_PLAYER = 3 # Too much will result in data skewed based on particular player performance, Capped at 20
 
-# FUNCTIONS
+# Filler Data if API returns NONE or WR
+DEFAULT_WR = 0.45
+DEFAULT_MATCH_HISTORY = 19
+DEFAULT_CHAMP_MASTERY = 200000
 
+# Ranks used for grabbing data from
+SAMPLE_RANKS = {
+    # Casual players are usually from silver to platinum
+    "SILVER",
+    "GOLD",
+    "PLATINUM"
+}
+DIVISIONS = {
+    "I",
+    "II",
+    "III",
+    "IV"
+}
+
+# Features, includes the label 
+class Features(NamedTuple):
+    match_id: object
+    time: object
+    avg_summoner_lvl_team_1: float
+    avg_match_history_length_team_1: float
+    avg_win_rate_team_1: float
+    sum_champ_mastery_team_1: int
+    avg_summoner_lvl_team_2: float
+    avg_match_history_length_team_2: float
+    avg_win_rate_team_2: float
+    sum_champ_mastery_team_2: int
+    winner: int
+
+# Can use later for getting better avg/accounting for other gamemodes
+EXCLUDED_QUEUE_IDS = {
+    0,    # Custom games
+    830,  # Co-op vs. AI: Intro bots
+    840,  # Co-op vs. AI: Beginner bots
+    850,  # Co-op vs. AI: Intermediate bots
+    450,  # ARAM
+    900,  # ARURF
+    920,  # Nexus Blitz
+    1300  # Nexus Blitz (old)
+    # Add more queue IDs to exclude other game modes
+}
+
+UPDATED = 97
+
+### FUNCTIONS
+
+def updateCheck():
+    """
+        Simple function for checking if file content has been successfully reloaded
+    """
+    return UPDATED
+    
 def apiCallHandler(request_url, rate_limiters):
     """
         Function for handling API calls
@@ -28,7 +103,7 @@ def apiCallHandler(request_url, rate_limiters):
         rate_limiter.acquire()
 
     headers = {
-        "X-Riot-Token": api_key 
+        "X-Riot-Token": config.api_key 
     }
     
     response = requests.get(request_url, headers=headers)
@@ -82,7 +157,7 @@ def multithread_call(urls, work):
     # "Future" objects store the future value of the API call, it is mapped to an index
     future_to_index = {}
     # Threadpoolexecutor ensures max concurrent workers don't exceed
-    with ThreadPoolExecutor(max_workers=MAX_REQUESTS_PER_SECOND) as executor:
+    with ThreadPoolExecutor(max_workers=lib.MAX_REQUESTS_PER_SECOND) as executor:
         # Go through list of URLs and their specific rate limiters
         for index, (url, url_rate_limiters) in enumerate(urls):
             # Submit API call to executor with its corresponding rate limiters
@@ -510,11 +585,11 @@ def read_match_ids():
     Raises:
         RuntimeError: If match_ids CSV is not found
     """
-    if not os.path.isfile("match_ids.csv"):
+    if not os.path.isfile(MATCH_ID_FILE):
         sys.exit("RuntimeError: match_ids CSV not found")
 
     match_ids = []
-    df = pd.read_csv("match_ids.csv")
+    df = pd.read_csv(MATCH_ID_FILE)
     for i in range(len(df)):
         match_ids += [df.iloc[i].values[0]]
     return match_ids
@@ -546,7 +621,7 @@ def get_data(match_ids, rate_limiter):
     for match_id in match_ids:
         # Search current CSV file if match_id already exists
         print(f'On this match_id: {match_id}')
-        if not(is_duplicate_match_id(csv_already_exists, match_id, data)):
+        if not(is_duplicate_match_id(match_id)):
             currData = []
             match_id, time, avg_lvl_1, avg_mhl_1, avg_wr_1, sum_cm_1, avg_lvl_2, avg_mhl_2, avg_wr_2, sum_cm_2, winner = get_features(match_id, rate_limiter)
             # Check if not remake or invalid match (3)
