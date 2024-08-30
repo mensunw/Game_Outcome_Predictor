@@ -18,8 +18,8 @@ importlib.reload(lib)
 
 ### GLOBAL VARIABLES
 
-CSV_FILE = "./data/game_data.csv" #test_data.csv
-MATCH_ID_FILE = "./data/match_ids.csv" # test_ids.csv
+CSV_FILE = "./data/game_data.csv" #test_data.csv or game_data.csv
+MATCH_ID_FILE = "./data/match_ids.csv" # test_ids.csv or match_ids.csv
 
 OVERRIDE_AND_CREATE_NEW_DATA = config.override_and_create_new_data
 
@@ -50,15 +50,15 @@ DIVISIONS = {
 class Features(NamedTuple):
     match_id: object
     time: object
-    avg_summoner_lvl_team_1: float
-    avg_match_history_length_team_1: float
-    avg_win_rate_team_1: float
-    sum_champ_mastery_team_1: int
-    avg_summoner_lvl_team_2: float
-    avg_match_history_length_team_2: float
-    avg_win_rate_team_2: float
-    sum_champ_mastery_team_2: int
-    winner: int
+    avg_summoner_lvl_ally: float
+    avg_match_history_length_ally: float
+    avg_win_rate_ally: float
+    sum_champ_mastery_ally: int
+    avg_summoner_lvl_enemy: float
+    avg_match_history_length_enemy: float
+    avg_win_rate_enemy: float
+    sum_champ_mastery_enemy: int
+    win: int
 
 # Can use later for getting better avg/accounting for other gamemodes
 EXCLUDED_QUEUE_IDS = {
@@ -118,6 +118,8 @@ def apiCallHandler(request_url, rate_limiters):
             # Not success but is 429 API limit error
             print("Status 429 detected")
             retry_after = int(response.headers.get("Retry-After", 0))
+            debug = response.headers.get("X-Method-Rate-Limit-Count")
+            print(f"debug: {debug}")
             # 429, retry
             print(f"Retrying in {retry_after}")
             time.sleep(retry_after)
@@ -326,8 +328,8 @@ def get_features(match_id, rate_limiter):
             rate_limiter: RateLimiter Object for API rate limits
 
         Returns:
-            tuple(...): Tuple representing (match_id, time, avg_lvl_1, avg_mhl_1, avg_wr_1, sum_cm_1, avg_lvl_2, avg_mhl_2, avg_wr_2, sum_cm_2, winner) where datatypes are (Object, Object, float, float, float, int, float, float, float, sum, int), winner represents the winning team with 3 meaning no one won
-            tuple(..., winner=3): If match_info is None or match result is a draw
+            tuple(...): Tuple representing (match_id, time, avg_lvl_a, avg_mhl_a, avg_wr_a, sum_cm_a, avg_lvl_e, avg_mhl_e, avg_wr_e, sum_cm_e, win) where datatypes are (Object, Object, float, float, float, int, float, float, float, sum, int), win represents whether 1 won or not, 3 meaning exclude data
+            tuple(..., win=3): If match_info is None 
     """
     
     match_info = apiCallHandler(f'https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}', [rate_limiter])
@@ -337,32 +339,32 @@ def get_features(match_id, rate_limiter):
         
     players = match_info['metadata']['participants']
     
-    # Team 1
-    avg_lvl_1 = 0
-    avg_mhl_1 = 0
-    avg_wr_1 = 0
-    sum_cm_1 = 0
-    total_1 = 0
+    # Ally team
+    avg_lvl_a = 0
+    avg_mhl_a = 0
+    avg_wr_a = 0
+    sum_cm_a = 0
+    total_a = 0
     
-    # Team 2
-    avg_lvl_2 = 0
-    avg_mhl_2 = 0
-    avg_wr_2 = 0
-    sum_cm_2 = 0
-    total_2 = 0
+    # Enemy team
+    avg_lvl_e = 0
+    avg_mhl_e = 0
+    avg_wr_e = 0
+    sum_cm_e = 0
+    total_e = 0
     
     # 1 means first 5 won, 2 means last 5 won, 3 means draw
-    winner = 0
+    win = 0
     if(match_info['info']['participants'][0]['win'] == True):
-        winner = 1
+        win = 1
     elif(match_info['info']['participants'][5]['win'] == True):
-        winner = 2
+        win = 0
     else:
         # Remake, no one won
-        winner = 3
+        win = 0
         print("REMADE")
     
-    if winner != 3:
+    if win != 3:
         for index in range(len(players)):
             # Get championID of each player
             champion_id = match_info['info']['participants'][index]['championId']
@@ -371,41 +373,41 @@ def get_features(match_id, rate_limiter):
 
             if status == True:
                 if(index < 5):
-                    avg_lvl_1 += level
-                    avg_mhl_1 += match_history_length
-                    avg_wr_1 += wr
-                    sum_cm_1 += champ_mastery
-                    total_1 +=1
+                    avg_lvl_a += level
+                    avg_mhl_a += match_history_length
+                    avg_wr_a += wr
+                    sum_cm_a += champ_mastery
+                    total_a +=1
                 elif(index >= 5):
-                    avg_lvl_2 += level
-                    avg_mhl_2 += match_history_length
-                    avg_wr_2 += wr
-                    sum_cm_2 += champ_mastery
-                    total_2 +=1
+                    avg_lvl_e += level
+                    avg_mhl_e += match_history_length
+                    avg_wr_e += wr
+                    sum_cm_e += champ_mastery
+                    total_e +=1
                 else:
                     print("Error: Shouldn't be here")
             else:
                 # get_summoner_features returned None/False
                 print("Warning: get_summoner_features returned None/False")
                 if(index < 5):
-                    total_1 -= 1
+                    total_a -= 1
                 else:
-                    total_2 -= 1
+                    total_e -= 1
                 
-        avg_lvl_1 = round(avg_lvl_1 / total_1, 2)
-        avg_mhl_1 = round(avg_mhl_1 / total_1, 2)
-        avg_wr_1 = round(avg_wr_1 / total_1, 2)
+        avg_lvl_a = round(avg_lvl_a / total_a, 2)
+        avg_mhl_a = round(avg_mhl_a / total_a, 2)
+        avg_wr_a = round(avg_wr_a / total_a, 2)
         
-        avg_lvl_2 = round(avg_lvl_2 / total_2, 2)
-        avg_mhl_2 = round(avg_mhl_2 / total_2, 2)
-        avg_wr_2 = round(avg_wr_2 / total_2, 2)
+        avg_lvl_e = round(avg_lvl_e / total_e, 2)
+        avg_mhl_e = round(avg_mhl_e / total_e, 2)
+        avg_wr_e = round(avg_wr_e / total_e, 2)
         
         
-    return (match_id, datetime.now(), avg_lvl_1, avg_mhl_1, avg_wr_1, sum_cm_1, avg_lvl_2, avg_mhl_2, avg_wr_2, sum_cm_2, winner)
+    return (match_id, datetime.now(), avg_lvl_a, avg_mhl_a, avg_wr_a, sum_cm_a, avg_lvl_e, avg_mhl_e, avg_wr_e, sum_cm_e, win)
 
 # Converts a given match_id and its features into a dictionary
 # Records will have format of dictionary(match_id, time, features...)
-def features_to_dictionary(match_id, time, avg_lvl_1, avg_mhl_1, avg_wr_1, sum_cm_1, avg_lvl_2, avg_mhl_2, avg_wr_2, sum_cm_2, winner):
+def features_to_dictionary(match_id, time, avg_lvl_a, avg_mhl_a, avg_wr_a, sum_cm_a, avg_lvl_e, avg_mhl_e, avg_wr_e, sum_cm_e, win):
     """
         Converts a given match_id and its features into a dictionary record, records will have format of dictionary(match_id, time, features...)
 
@@ -419,15 +421,15 @@ def features_to_dictionary(match_id, time, avg_lvl_1, avg_mhl_1, avg_wr_1, sum_c
     features_record = {
         "match_id": match_id,
         "time": time, 
-        "avg_summoner_lvl_team_1": avg_lvl_1,
-        "avg_match_history_length_team_1": avg_mhl_1,
-        "avg_win_rate_team_1": avg_wr_1,
-        "sum_champ_mastery_team_1": sum_cm_1,
-        "avg_summoner_lvl_team_2": avg_lvl_2,
-        "avg_match_history_length_team_2": avg_mhl_2,
-        "avg_win_rate_team_2": avg_wr_2,
-        "sum_champ_mastery_team_2": sum_cm_2,
-        "winner": winner
+        "avg_summoner_lvl_ally": avg_lvl_a,
+        "avg_match_history_length_ally": avg_mhl_a,
+        "avg_win_rate_ally": avg_wr_a,
+        "sum_champ_mastery_ally": sum_cm_a,
+        "avg_summoner_lvl_enemy": avg_lvl_e,
+        "avg_match_history_length_enemy": avg_mhl_e,
+        "avg_win_rate_enemy": avg_wr_e,
+        "sum_champ_mastery_enemy": sum_cm_e,
+        "win": win
     }
     return features_record
 
@@ -623,10 +625,10 @@ def get_data(match_ids, rate_limiter):
         print(f'On this match_id: {match_id}')
         if not(is_duplicate_match_id(match_id)):
             currData = []
-            match_id, time, avg_lvl_1, avg_mhl_1, avg_wr_1, sum_cm_1, avg_lvl_2, avg_mhl_2, avg_wr_2, sum_cm_2, winner = get_features(match_id, rate_limiter)
+            match_id, time, avg_lvl_1, avg_mhl_1, avg_wr_1, sum_cm_1, avg_lvl_2, avg_mhl_2, avg_wr_2, sum_cm_2, win = get_features(match_id, rate_limiter)
             # Check if not remake or invalid match (3)
-            if(winner != 3):
-                record = features_to_dictionary(match_id, time, avg_lvl_1, avg_mhl_1, avg_wr_1, sum_cm_1, avg_lvl_2, avg_mhl_2, avg_wr_2, sum_cm_2, winner)
+            if(win != 3):
+                record = features_to_dictionary(match_id, time, avg_lvl_1, avg_mhl_1, avg_wr_1, sum_cm_1, avg_lvl_2, avg_mhl_2, avg_wr_2, sum_cm_2, win)
                 currData.append(record)
                 # Write to CSV/create a new one to save progress
                 df = pd.DataFrame(currData)
