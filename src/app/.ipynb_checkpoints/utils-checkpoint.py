@@ -24,7 +24,7 @@ MATCH_ID_FILE = "./data/match_ids.csv" # test_ids.csv or match_ids.csv
 OVERRIDE_AND_CREATE_NEW_DATA = config.override_and_create_new_data
 
 # Knobs for grabbing data
-SAMPLE_SIZE_SCALE = 10 # X for each rank & division (X*3*4*3), (X*num_sample_ranks*divisions*num_for_each_player)
+SAMPLE_SIZE_SCALE = 20 # X for each rank & division (X*3*4*3), (X*num_sample_ranks*divisions*num_for_each_player)
 NUM_SAMPLE_FOR_EACH_PLAYER = 3 # Too much will result in data skewed based on particular player performance, Capped at 20
 
 # Filler Data if API returns NONE or WR
@@ -73,7 +73,7 @@ EXCLUDED_QUEUE_IDS = {
     # Add more queue IDs to exclude other game modes
 }
 
-UPDATED = 97
+UPDATED = 9
 
 ### FUNCTIONS
 
@@ -118,8 +118,14 @@ def apiCallHandler(request_url, rate_limiters):
             # Not success but is 429 API limit error
             print("Status 429 detected")
             retry_after = int(response.headers.get("Retry-After", 0))
-            debug = response.headers.get("X-Method-Rate-Limit-Count")
-            print(f"debug: {debug}")
+            #debug1 = response.headers.get("X-Method-Rate-Limit-Count")
+            debug2 = response.headers.get("X-App-Rate-Limit-Count")
+            debug3 = response.headers.get("X-Rate-Limit-Type",0)
+            
+            #print(f"method-rate-limit: {debug1}")
+            print(f"app-rate-limit: {debug2}")
+            print(f"rate-limit-type: {debug3}")
+            #print(f"url: {request_url}")
             # 429, retry
             print(f"Retrying in {retry_after}")
             time.sleep(retry_after)
@@ -137,6 +143,8 @@ def apiCallHandler(request_url, rate_limiters):
             sys.exit("Stopping all execution")
         
     # (finally) status of 200
+    #debug2 = response.headers.get("X-App-Rate-Limit-Count")
+    #print(f"app-rate-count: {debug2}")
     return response.json()
 
 def multithread_call(urls, work):
@@ -159,7 +167,7 @@ def multithread_call(urls, work):
     # "Future" objects store the future value of the API call, it is mapped to an index
     future_to_index = {}
     # Threadpoolexecutor ensures max concurrent workers don't exceed
-    with ThreadPoolExecutor(max_workers=lib.MAX_REQUESTS_PER_SECOND) as executor:
+    with ThreadPoolExecutor(max_workers=8) as executor: #max_workers=lib.MAX_REQUESTS_PER_SECOND
         # Go through list of URLs and their specific rate limiters
         for index, (url, url_rate_limiters) in enumerate(urls):
             # Submit API call to executor with its corresponding rate limiters
