@@ -11,6 +11,7 @@ import threading
 from datetime import datetime
 from typing import NamedTuple
 import pandas as pd
+import urllib.parse
 import config
 importlib.reload(config)
 from app import lib
@@ -413,8 +414,6 @@ def get_features(match_id, rate_limiter):
         
     return (match_id, datetime.now(), avg_lvl_a, avg_mhl_a, avg_wr_a, sum_cm_a, avg_lvl_e, avg_mhl_e, avg_wr_e, sum_cm_e, win)
 
-# Converts a given match_id and its features into a dictionary
-# Records will have format of dictionary(match_id, time, features...)
 def features_to_dictionary(match_id, time, avg_lvl_a, avg_mhl_a, avg_wr_a, sum_cm_a, avg_lvl_e, avg_mhl_e, avg_wr_e, sum_cm_e, win):
     """
         Converts a given match_id and its features into a dictionary record, records will have format of dictionary(match_id, time, features...)
@@ -441,7 +440,6 @@ def features_to_dictionary(match_id, time, avg_lvl_a, avg_mhl_a, avg_wr_a, sum_c
     }
     return features_record
 
-# Work function for grabbing (SAMPLE_SIZE_SCALE) amount for each players_info
 def work_func_summonerID(players_info):
     """
         Work function for grabbing (SAMPLE_SIZE_SCALE) amount for each players_info
@@ -647,5 +645,143 @@ def get_data(match_ids, rate_limiter):
                     # Use this one to create CSV for the first time
                     df.to_csv(CSV_FILE, index=False)
     print(f"Finished retrieving data")
+    return None
+
+# DEPLOYMENT METHODS
+
+def get_live_features(summoner_id, rate_limiter):
+    
+    """
+        Gets the live features for the match/record given the summoner ID
+
+        Args:
+            summoner_id: String representing a summoner id
+            rate_limiter: RateLimiter Object for API rate limits
+
+        Returns:
+            tuple(...): Tuple representing (match_id, time, avg_lvl_a, avg_mhl_a, avg_wr_a, sum_cm_a, avg_lvl_e, avg_mhl_e, avg_wr_e, sum_cm_e) where datatypes are (Object, Object, float, float, float, int, float, float, float, sum, -1), win should be unknown outcome 
+            tuple(..., win=3): If match_info is None 
+    """
+    
+    match_info = apiCallHandler(f'https://na1.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/{summoner_id}', [rate_limiter])
+    if(match_info == None):
+        # API Handler returned None, couldn't get data on match
+        return (summoner_id, datetime.now(), 0, 0, 0, 0, 0, 0, 0, 0, 3)
+
+    # Each participant is a list of participants which contain the PUUID among data
+    players = match_info['participants']
+    
+    # Ally team
+    avg_lvl_a = 0
+    avg_mhl_a = 0
+    avg_wr_a = 0
+    sum_cm_a = 0
+    total_a = 0
+    
+    # Enemy team
+    avg_lvl_e = 0
+    avg_mhl_e = 0
+    avg_wr_e = 0
+    sum_cm_e = 0
+    total_e = 0
+
+    # Unknown winner in live game
+    win = -1
+    
+    if win != 3:
+        for index in range(len(players)): 
+            # Get championID of each player
+            champion_id = players[index]['championId']
+            
+            status, level, match_history_length, wr, champ_mastery = get_summoner_features(players[index]['puuid'], champion_id, rate_limiter)
+
+            if status == True:
+                if(index < 5):
+                    avg_lvl_a += level
+                    avg_mhl_a += match_history_length
+                    avg_wr_a += wr
+                    sum_cm_a += champ_mastery
+                    total_a +=1
+                elif(index >= 5):
+                    avg_lvl_e += level
+                    avg_mhl_e += match_history_length
+                    avg_wr_e += wr
+                    sum_cm_e += champ_mastery
+                    total_e +=1
+                else:
+                    print("Error: Shouldn't be here")
+            else:
+                # get_summoner_features returned None/False
+                print("Warning: get_summoner_features returned None/False")
+                if(index < 5):
+                    total_a -= 1
+                else:
+                    total_e -= 1
+                
+        avg_lvl_a = round(avg_lvl_a / total_a, 2)
+        avg_mhl_a = round(avg_mhl_a / total_a, 2)
+        avg_wr_a = round(avg_wr_a / total_a, 2)
+        
+        avg_lvl_e = round(avg_lvl_e / total_e, 2)
+        avg_mhl_e = round(avg_mhl_e / total_e, 2)
+        avg_wr_e = round(avg_wr_e / total_e, 2)
+        
+        
+    return (summoner_id, datetime.now(), avg_lvl_a, avg_mhl_a, avg_wr_a, sum_cm_a, avg_lvl_e, avg_mhl_e, avg_wr_e, sum_cm_e, win)
+
+def live_features_to_dictionary(summoner_id, time, avg_lvl_a, avg_mhl_a, avg_wr_a, sum_cm_a, avg_lvl_e, avg_mhl_e, avg_wr_e, sum_cm_e, win):
+    """
+        Converts a given summoner_id and its features into a dictionary record, records will have format of dictionary(match_id, time, features...)
+
+        Args: 
+            summoner_id: Object representing summoner_id, basically tells us the match info
+            time: Object representing current time
+            ...: Features for match of summoner_id
+        Returns:
+            dictionary(features): A dictionary with each feature mapped to the corresponding input feature
+    """
+    features_record = {
+        "summoner_id": summoner_id,
+        "time": time, 
+        "avg_summoner_lvl_ally": avg_lvl_a,
+        "avg_match_history_length_ally": avg_mhl_a,
+        "avg_win_rate_ally": avg_wr_a,
+        "sum_champ_mastery_ally": sum_cm_a,
+        "avg_summoner_lvl_enemy": avg_lvl_e,
+        "avg_match_history_length_enemy": avg_mhl_e,
+        "avg_win_rate_enemy": avg_wr_e,
+        "sum_champ_mastery_enemy": sum_cm_e,
+        "win": win
+    }
+    return features_record
+
+def get_puuid(name, tag, rate_limiter):
+    """
+        Retrieves summoner_id given name#tag
+            Args:
+                name: String representing player name
+                rate_limiter: RateLimiter object representing API call limits
+            Returns:
+                String: represents player's PUUID
+    """
+    parsed_name = urllib.parse.quote(name)
+    player_info = apiCallHandler(f'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{parsed_name}/{tag}', [rate_limiter])
+    return player_info['puuid']
+
+def get_live_data(summoner_id, rate_limiter):
+    """
+        Retrieves data/features for the summoner_id
+            Args:
+                summoner_id: String representing summoner_id
+                rate_limiter: RateLimiter object representing API call limits
+            Returns:
+                Tuple(): data for the summoner id
+                None: if invalid match
+    """
+    
+    summoner_id, time, avg_lvl_1, avg_mhl_1, avg_wr_1, sum_cm_1, avg_lvl_2, avg_mhl_2, avg_wr_2, sum_cm_2, win = get_live_features(summoner_id, rate_limiter)
+    # Check if not invalid match (3)
+    if(win == -1):
+        return live_features_to_dictionary(summoner_id, time, avg_lvl_1, avg_mhl_1, avg_wr_1, sum_cm_1, avg_lvl_2, avg_mhl_2, avg_wr_2, sum_cm_2, win)
     return None
     
