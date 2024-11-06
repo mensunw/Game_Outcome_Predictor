@@ -74,7 +74,7 @@ EXCLUDED_QUEUE_IDS = {
     # Add more queue IDs to exclude other game modes
 }
 
-UPDATED = 9
+UPDATED = 7
 
 ### FUNCTIONS
 
@@ -328,7 +328,6 @@ def get_summoner_features(summoner_puuid, champion_id, rate_limiter):
     return (True, level, match_history_length, avg_wr, champ_mastery)
 
 def get_features(match_id, rate_limiter):
-    
     """
         Gets the features for the match/record given the match ID
 
@@ -784,4 +783,69 @@ def get_live_data(summoner_id, rate_limiter):
     if(win == -1):
         return live_features_to_dictionary(summoner_id, time, avg_lvl_1, avg_mhl_1, avg_wr_1, sum_cm_1, avg_lvl_2, avg_mhl_2, avg_wr_2, sum_cm_2, win)
     return None
+
+### 15-MIN DATA FUNCTIONS
+
+def get_features_15(match_id,  rate_limiter):
+    # gets all features for first 15mins of a completed game
+    # returns TWO rows!
+    # ratio of all things for team 1, and ratio of all things for team2
+    
+    # get timestamped features
+    match_history_search_limiter = lib.RateLimiter_Method([(2000,10)])
+    timeline_data = apiCallHandler(f'https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}/timeline', [rate_limiter, match_history_search_limiter])
+    # get team gold and xp at 15mins 
+    team1_gold = 0
+    team2_gold = 0
+    team1_xp = 0
+    team2_xp = 0
+    team1_cs = 0
+    team2_cs = 0
+    if(timeline_data['info']['frameInterval'] != 60000):
+        print(f'ALERT: {match_id} does not have frameInterval of 60000')
+    # Check if we have at least 15 frames
+    if len(timeline_data['info']['frames']) >= 15:
+        # Access the 15th frame 
+        frame_15 = timeline_data['info']['frames'][15]
+        # Iterate over participantFrames to aggregate gold/xp/cs per team
+        for participant_id, participant_data in frame_15['participantFrames'].items():
+            team_id = 1 if int(participant_id) <= 5 else 2  # Typically, IDs 1-5 are team1, and 6-10 are team2
+            if team_id == 1:
+                team1_gold += participant_data['totalGold']
+                team1_xp +=participant_data['xp']
+                team1_cs +=participant_data['jungleMinionsKilled']
+                team1_cs +=participant_data['minionsKilled']
+            else:
+                team2_gold += participant_data['totalGold']
+                team2_xp +=participant_data['xp']
+                team2_cs +=participant_data['jungleMinionsKilled']
+                team2_cs +=participant_data['minionsKilled']
+
+    t1_to_t2_gold_ratio = team1_gold / team2_gold
+    t2_to_t1_gold_ratio = team2_gold / team1_gold
+    t1_to_t2_xp_ratio = team1_xp / team2_xp
+    t2_to_t1_xp_ratio = team2_xp / team1_xp
+    t1_to_t2_cs_ratio = team1_cs / team2_cs
+    t2_to_t1_cs_ratio = team2_cs / team1_cs
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
