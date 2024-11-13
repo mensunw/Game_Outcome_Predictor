@@ -794,15 +794,26 @@ def get_features_15(match_id,  rate_limiter):
     # get timestamped features
     match_history_search_limiter = lib.RateLimiter_Method([(2000,10)])
     timeline_data = apiCallHandler(f'https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}/timeline', [rate_limiter, match_history_search_limiter])
-    # get team gold and xp at 15mins 
+    if(timeline_data == None):
+        # API Handler returned None, couldn't get data on match
+        print(f'API returned none: {match_id}')
+        return None
+    # get team gold & xp & cs & kills at 15mins 
     team1_gold = 0
     team2_gold = 0
     team1_xp = 0
     team2_xp = 0
     team1_cs = 0
     team2_cs = 0
+    team1_kills = 0
+    team2_kills = 0
+    # Check for duration >= 15mins and frame interval 
+    if(timeline_data['info']['frames'][-1]['events'][-1]['timestamp'] < 900000):
+        print(f'ALERT: {match_id} does not last 15mins')
+        return None
     if(timeline_data['info']['frameInterval'] != 60000):
         print(f'ALERT: {match_id} does not have frameInterval of 60000')
+        return None
     # Check if we have at least 15 frames
     if len(timeline_data['info']['frames']) >= 15:
         # Access the 15th frame 
@@ -821,13 +832,97 @@ def get_features_15(match_id,  rate_limiter):
                 team2_cs +=participant_data['jungleMinionsKilled']
                 team2_cs +=participant_data['minionsKilled']
 
+    # Loop through all frames up to the 15th to count kills
+    for frame in timeline_data['info']['frames'][:15]:
+        for event in frame['events']:
+            if event['type'] == "CHAMPION_KILL":
+                killer_id = event['killerId']
+                if killer_id != 0:  # Exclude neutral kills or accidental deaths
+                    team_id = 1 if killer_id <= 5 else 2
+                    if team_id == 1:
+                        team1_kills += 1
+                    else:
+                        team2_kills += 1
+
     t1_to_t2_gold_ratio = team1_gold / team2_gold
     t2_to_t1_gold_ratio = team2_gold / team1_gold
+    
     t1_to_t2_xp_ratio = team1_xp / team2_xp
     t2_to_t1_xp_ratio = team2_xp / team1_xp
+    
     t1_to_t2_cs_ratio = team1_cs / team2_cs
     t2_to_t1_cs_ratio = team2_cs / team1_cs
+
+    t1_t2_kills_ratio = team1_kills / team2_kills
+    t2_t1_kills_ratio = team2_kills / team1_kills
+
+    # Get winning team
+    winning_team = timeline_data['info']['frames'][-1]['events'][-1]['winningTeam']
+    if(winning_team != 100 and winning_team != 200):
+        print(f'No team won for match id: {match_id}')
+        return None
+
+    # Creates 2 separate records for each team
+    record1 = (match_id, datetime.now(), t1_to_t2_gold_ratio, t1_to_t2_xp_ratio, t1_to_t2_cs_ratio, t1_t2_kills_ratio, 1 if winning_team == 100 else 0)
+    record2 = (match_id, datetime.now(), t2_to_t1_gold_ratio, t2_to_t1_xp_ratio, t2_to_t1_cs_ratio, t2_t1_kills_ratio, 1 if winning_team == 200 else 0)
     
+    return [record1, record2]
+
+def features_to_dictionary_15(match_id, time, gold_ratio, xp_ratio, cs_ratio, kills_ratio, win):
+    """
+        Converts a given match_id and its features into a dictionary record, records will have format of dictionary(match_id, time, features...)
+
+        Args: 
+            match_id: Object representing games' match id
+            time: Object representing current time
+            ...: Features for match
+        Returns:
+            dictionary(features): A dictionary with each feature mapped to the corresponding input feature
+    """
+    features_record = {
+        "match_id": match_id,
+        "time": time, 
+        "gold_ratio": gold_ratio,
+        "xp_ratio": xp_ratio,
+        "cs_ratio": cs_ratio,
+        "kills_ratio": kills_ratio,
+        "win": win
+    }
+    return features_record
+
+def get_data_15(match_ids, rate_limiter):
+    """
+        Retrieves data/features for the match ids
+            Args:
+                match_ids: List of objects representing match ids
+                rate_limiter: RateLimiter object representing API call limits
+            Returns:
+                None
+    """
+    for match_id in match_ids:
+        # Search current CSV file if match_id already exists
+        print(f'On this match_id: {match_id}')
+        if not(is_duplicate_match_id(match_id)):
+            currData = []
+            features1 = get_features_15(match_id, rate_limiter)[0]
+            features2 = get_features_15(match_id, rate_limiter)[1]
+            if(features1 and features2 is not None)
+                match_id, time_0, gold_ratio_0, xp_ratio_0, cs_ratio_0, kills_ratio_0 win_0 = features1
+                match_id, time_1, gold_ratio_1, xp_ratio_1, cs_ratio_1, kills_ratio_1 win_1 = features2
+                record0 = features_to_dictionary_15(match_id, time_0, gold_ratio_0, xp_ratio_0, cs_ratio_0, kills_ratio_0 win_0)
+                record1 = features_to_dictionary_15(match_id, time_1, gold_ratio_1, xp_ratio_1, cs_ratio_1, kills_ratio_1 win_1)
+                currData.append(record0)
+                currData.append(record1)
+                # Write to CSV/create a new one to save progress
+                df = pd.DataFrame(currData)
+                if(os.path.isfile(CSV_FILE)):
+                    # Use this one if DataFrame/CSV already exists
+                    df.to_csv(CSV_FILE, index=False, mode='a', header=False)
+                else:
+                    # Use this one to create CSV for the first time
+                    df.to_csv(CSV_FILE, index=False)
+    print(f"Finished retrieving data")
+    return None
 
 
 
