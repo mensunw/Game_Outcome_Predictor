@@ -25,7 +25,7 @@ MATCH_ID_FILE = "./data/match_ids.csv" # test_ids.csv or match_ids.csv
 OVERRIDE_AND_CREATE_NEW_DATA = config.override_and_create_new_data
 
 # Knobs for grabbing data
-SAMPLE_SIZE_SCALE = 20 # X for each rank & division (X*3*4*3), (X*num_sample_ranks*divisions*num_for_each_player)
+SAMPLE_SIZE_SCALE = 30 # X for each rank & division (X*3*4*3), (X*num_sample_ranks*divisions*num_for_each_player)
 NUM_SAMPLE_FOR_EACH_PLAYER = 3 # Too much will result in data skewed based on particular player performance, Capped at 20
 
 # Filler Data if API returns NONE or WR
@@ -74,7 +74,7 @@ EXCLUDED_QUEUE_IDS = {
     # Add more queue IDs to exclude other game modes
 }
 
-UPDATED = 7
+UPDATED = 9
 
 ### FUNCTIONS
 
@@ -853,8 +853,13 @@ def get_features_15(match_id,  rate_limiter):
     t1_to_t2_cs_ratio = team1_cs / team2_cs
     t2_to_t1_cs_ratio = team2_cs / team1_cs
 
-    t1_t2_kills_ratio = team1_kills / team2_kills
-    t2_t1_kills_ratio = team2_kills / team1_kills
+    # Handle case where a team gets 0 kills
+    if team1_kills == 0 or team2_kills == 0:
+        t1_t2_kills_ratio = 1.0
+        t2_t1_kills_ratio = 1.0
+    else:
+        t1_t2_kills_ratio = team1_kills / team2_kills
+        t2_t1_kills_ratio = team2_kills / team1_kills
 
     # Get winning team
     winning_team = timeline_data['info']['frames'][-1]['events'][-1]['winningTeam']
@@ -890,7 +895,7 @@ def features_to_dictionary_15(match_id, time, gold_ratio, xp_ratio, cs_ratio, ki
     }
     return features_record
 
-def get_data_15(match_ids, rate_limiter):
+def get_data_15(match_ids, rate_limiter, start_at=0):
     """
         Retrieves data/features for the match ids
             Args:
@@ -899,18 +904,19 @@ def get_data_15(match_ids, rate_limiter):
             Returns:
                 None
     """
-    for match_id in match_ids:
+    for match_id in match_ids[start_at+1:]:
         # Search current CSV file if match_id already exists
         print(f'On this match_id: {match_id}')
         if not(is_duplicate_match_id(match_id)):
             currData = []
-            features1 = get_features_15(match_id, rate_limiter)[0]
-            features2 = get_features_15(match_id, rate_limiter)[1]
-            if(features1 and features2 is not None)
-                match_id, time_0, gold_ratio_0, xp_ratio_0, cs_ratio_0, kills_ratio_0 win_0 = features1
-                match_id, time_1, gold_ratio_1, xp_ratio_1, cs_ratio_1, kills_ratio_1 win_1 = features2
-                record0 = features_to_dictionary_15(match_id, time_0, gold_ratio_0, xp_ratio_0, cs_ratio_0, kills_ratio_0 win_0)
-                record1 = features_to_dictionary_15(match_id, time_1, gold_ratio_1, xp_ratio_1, cs_ratio_1, kills_ratio_1 win_1)
+            features = get_features_15(match_id, rate_limiter)
+            if features is not None:
+                features1 = features[0]
+                features2 = features[1]
+                match_id, time_0, gold_ratio_0, xp_ratio_0, cs_ratio_0, kills_ratio_0, win_0 = features1
+                match_id, time_1, gold_ratio_1, xp_ratio_1, cs_ratio_1, kills_ratio_1, win_1 = features2
+                record0 = features_to_dictionary_15(match_id, time_0, gold_ratio_0, xp_ratio_0, cs_ratio_0, kills_ratio_0, win_0)
+                record1 = features_to_dictionary_15(match_id, time_1, gold_ratio_1, xp_ratio_1, cs_ratio_1, kills_ratio_1, win_1)
                 currData.append(record0)
                 currData.append(record1)
                 # Write to CSV/create a new one to save progress
