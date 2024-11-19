@@ -904,7 +904,7 @@ def get_data_15(match_ids, rate_limiter, start_at=0):
             Returns:
                 None
     """
-    for match_id in match_ids[start_at+1:]:
+    for match_id in match_ids[start_at-1:]:
         # Search current CSV file if match_id already exists
         print(f'On this match_id: {match_id}')
         if not(is_duplicate_match_id(match_id)):
