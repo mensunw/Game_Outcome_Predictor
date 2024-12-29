@@ -1,0 +1,2 @@
+match_id,time,avg_summoner_lvl_ally,avg_match_history_length_ally,avg_win_rate_ally,sum_champ_mastery_ally,avg_summoner_lvl_enemy,avg_match_history_length_enemy,avg_win_rate_enemy,sum_champ_mastery_enemy,win
+NA1_5097488286,2024-08-29 14:24:02.932916,249.8,20.0,0.52,1277911,346.2,20.0,0.49,2245926,0
