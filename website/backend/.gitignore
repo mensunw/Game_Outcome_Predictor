@@ -16,3 +16,33 @@ env/
 # Django migrations (temporary or backup files)
 */migrations/__pycache__/
 */migrations/*.pyc
+
+# Django cache files
+*.log
+*.pot
+*.mo
+*.pid
+*.cache
+*.coverage
+*.coverage.*
+
+# Editor and IDE settings
+.vscode/*
+.idea/
+.spyderproject
+.spyproject
+*.sublime-project
+*.sublime-workspace
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Pipenv and Poetry
+.python-version
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
