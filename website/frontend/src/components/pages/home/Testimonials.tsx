@@ -1,5 +1,7 @@
 import { cn } from '@/lib/utils'
 import Marquee from '@/components/ui/marquee'
+import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 
 const reviews = [
     {
@@ -104,50 +106,63 @@ const ReviewCard = ({
 
 export default function Testimonials() {
     return (
-        <section className="container mx-auto px-4 py-12 text-center mb-36">
-            {/* Title and Description */}
-            <div className="mb-8 flex flex-col items-center">
-                <h2 className="text-3xl font-bold tracking-tight">
-                    See What Others Are Saying
-                </h2>
-                <p className="mt-2 w-3/4 text-lg text-muted-foreground">
-                    These are fake reviews for now, but real ones are coming soon... 👀
-                </p>
-            </div>
+        <Card>
+            <section className="container mx-auto px-4 py-12 text-center mb-36">
+                {/* Title and Description */}
+                <div className="mb-8 flex flex-col items-center">
+                    <h2 className="text-3xl font-bold tracking-tight">
+                        Optimize Your Gameplay with the FF Detector
+                    </h2>
+                    <p className="mt-2 w-3/4 text-lg text-muted-foreground">
+                        Effortlessly predict your game’s outcome within the first 15 minutes and make informed decisions to surrender or keep pushing for victory.
+                    </p>
+                </div>
 
-            {/* Live Region for Screen Readers */}
-            <div
-                id="live-region"
-                aria-live="polite"
-                aria-atomic="true"
-                className="sr-only"
-            ></div>
-
-            {/* Testimonials Section */}
-            <div className="relative">
-                <Marquee
-                    pauseOnHover
-                    className="[--duration:20s]"
-                    aria-live="polite" // Ensures testimonials are announced as they scroll
-                >
-                    {firstRow.map((review) => (
-                        <ReviewCard key={review.username} {...review} />
-                    ))}
-                </Marquee>
-                <Marquee
-                    reverse
-                    pauseOnHover
-                    className="[--duration:20s]"
+                {/* Live Region for Screen Readers */}
+                <div
+                    id="live-region"
                     aria-live="polite"
-                >
-                    {secondRow.map((review) => (
-                        <ReviewCard key={review.username} {...review} />
-                    ))}
-                </Marquee>
-                {/* Gradient Overlays */}
-                <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-background"></div>
-                <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-background"></div>
-            </div>
-        </section>
+                    aria-atomic="true"
+                    className="sr-only"
+                ></div>
+
+                {/* Testimonials Section */}
+                <div className="relative">
+                    <Marquee
+                        pauseOnHover
+                        className="[--duration:20s]"
+                        aria-live="polite" // Ensures testimonials are announced as they scroll
+                    >
+                        {firstRow.map((review) => (
+                            <ReviewCard key={review.username} {...review} />
+                        ))}
+                    </Marquee>
+                    <Marquee
+                        reverse
+                        pauseOnHover
+                        className="[--duration:20s]"
+                        aria-live="polite"
+                    >
+                        {secondRow.map((review) => (
+                            <ReviewCard key={review.username} {...review} />
+                        ))}
+                    </Marquee>
+                    {/* Gradient Overlays */}
+                    <div className="pointer-events-none absolute inset-y-0 left-0 w-1/3 bg-gradient-to-r from-background"></div>
+                    <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-background"></div>
+                </div>
+                {/* Get Started Section */}
+                <div className="mb-8 flex flex-col items-center">
+                    <h2 className="text-3xl font-bold tracking-tight">
+                        Unlock the Power of Precision
+                    </h2>
+                    <p className="mt-2 w-3/4 text-lg text-muted-foreground">
+                        Ready to level up your gameplay? Discover the FF Detector, your ultimate tool for predicting game outcomes with unmatched accuracy!
+                    </p>
+
+                    <Button> Get Started For Free > </Button>
+                </div>
+            </section>
+        </Card>
     )
 }

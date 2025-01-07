@@ -1,8 +1,8 @@
 'use client'
 
-import Image from "next/image";
 import React, { useEffect, useState } from 'react';
 import Testimonials from '@/components/pages/home/Testimonials'
+import Hero from '@/components/pages/home/Hero'
 
 export default function Home() {
   const [backendMessage, setBackendMessage] = useState("");
@@ -15,13 +15,8 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <div className="p-6 bg-white rounded-lg shadow-lg text-center">
-          <h1 className="text-2xl font-bold text-blue-500">React & Django Test</h1>
-          <p className="mt-4 text-gray-700">Backend Message: {backendMessage}</p>
-        </div>
-      </div>
+    <div className="ml-[3%] mr-[3%]">
+      <Hero />
       <Testimonials />
     </div>
   );
