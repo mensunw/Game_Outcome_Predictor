@@ -15,7 +15,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="ml-[3%] mr-[3%]">
+    <div className="" >
       <Hero />
       <Testimonials />
     </div>

@@ -106,8 +106,8 @@ const ReviewCard = ({
 
 export default function Testimonials() {
     return (
-        <Card>
-            <section className="container mx-auto px-4 py-12 text-center mb-36">
+        <Card className="bg-sky-100 ml-[18%] mr-[18%] mt-[5%]">
+            <section className="container mx-auto px-4 py-12 text-center">
                 {/* Title and Description */}
                 <div className="mb-8 flex flex-col items-center">
                     <h2 className="text-3xl font-bold tracking-tight">

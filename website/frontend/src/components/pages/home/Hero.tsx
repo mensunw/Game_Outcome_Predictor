@@ -2,20 +2,19 @@ import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }
 
 export default function Hero() {
     return (
-        <section className="w-full mt-12 p-6 pb-12 bg-amber-50 mb-36">
+        <section className="w-full p-6 pt-28 pb-12 mb-[20%]">
             <div className="container px-4 md:px-6">
                 <div className="flex flex-col items-center space-y-6 text-center">
                     <div className="space-y-4">
-                        <h2 className="text-3xl font-bold tracking-tight">
-                            FF Detector
+                        <h2 className="text-5xl font-black tracking-tight max-w-[600px]">
+                            Predict Game Outcomes With Unmatched Precision
                         </h2>
-                        <p className="text-p1 mx-auto max-w-[700px] text-muted-foreground md:text-xl font-body">
-                            Ready to take your gameplay strategy to the next level? Look no further than the FF Detector! With its advanced prediction capabilities, you can make informed decisions in your games and maximize your win potential right from the 15-minute mark.
-                        </p>
-
                     </div>
-
                 </div>
+
+                <Card className="bg-sky-100 ml-[18%] mr-[18%] mt-[5%]">
+                    img here later
+                </Card>
             </div>
         </section>
     )

@@ -30,9 +30,10 @@ export default function RootLayout({
       <head>
 
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased ml-[15%] mr-[15%]`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Navbar />
-        <main>{children}</main>
+        <hr />
+        <main className="bg-sky-50">{children}</main>
       </body>
     </html>
   );
