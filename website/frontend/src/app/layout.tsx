@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Toaster } from "@/components/ui/toaster"
 import localFont from "next/font/local";
 import "./globals.css";
 
@@ -34,6 +35,7 @@ export default function RootLayout({
         <Navbar />
         <hr />
         <main className="bg-sky-50">{children}</main>
+        <Toaster />
       </body>
     </html>
   );

@@ -15,6 +15,9 @@ import {
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
+import { useToast } from '@/hooks/use-toast'
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 
 const formSchema = z.object({
     username: z.string().min(2, {
@@ -23,6 +26,10 @@ const formSchema = z.object({
 })
 
 export default function ProfileForm() {
+
+    const { toast } = useToast()
+    const router = useRouter()
+
     // 1. Define your form.
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -32,10 +39,43 @@ export default function ProfileForm() {
     })
 
     // 2. Define a submit handler.
-    function onSubmit(values: z.infer<typeof formSchema>) {
-        // Do something with the form values.
-        // ✅ This will be type-safe and validated.
-        console.log(values)
+    async function onSubmit(values: z.infer<typeof formSchema>) {
+        // Call backend to check and predict the outcome using the model
+        try {
+            const response = await (
+                await fetch("http://127.0.0.1:8000/predict/",
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(values),
+                    })
+            ).json()
+            const { result, error } = response
+
+            if (result) {
+                const queryString = `data=${encodeURIComponent(JSON.stringify(result))}`;
+                router.push(`/predict/result?${queryString}`);
+            }
+
+            if (error) {
+                toast({
+                    variant: "destructive",
+                    title: "Invalid game name and tag line.",
+                    description: error,
+                })
+            }
+
+
+        } catch (error) {
+            toast({
+                variant: "destructive",
+                title: "Uh oh! Something went wrong.",
+                description: "There was a problem with your request.",
+            })
+            console.error("Error fetching from backend:", error);
+        }
     }
 
     return (
@@ -56,7 +96,7 @@ export default function ProfileForm() {
                         </FormItem>
                     )}
                 />
-                <Button type="submit">Submit</Button>
+                <Button type="submit">Predict</Button>
             </form>
         </Form>
     )
