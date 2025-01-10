@@ -930,7 +930,46 @@ def get_data_15(match_ids, rate_limiter, start_at=0):
     print(f"Finished retrieving data")
     return None
 
+### NEW FUNCTIONS FOR TEAM COMP ANALYZER
 
+def get_features_tc(match_id,  rate_limiter):
+    # gets all features for related to team composition for a game
+    # returns TWO rows!
+    # ratio of all things for team 1, and ratio of all things for team2
+    
+    # get match details features
+    match_history_search_limiter = lib.RateLimiter_Method([(2000,10)])
+    data = apiCallHandler(f'https://americas.api.riotgames.com/lol/match/v5/matches/{match_id}', [rate_limiter, match_history_search_limiter])
+    if(data == None):
+        # API Handler returned None, couldn't get data on match
+        print(f'API returned none: {match_id}')
+        return None
+
+    # Get champions played for both teams
+    team1_champions = []
+    team2_champions = []
+    
+    # Assuming `data` contains the parsed JSON response from the API call
+    participants = data['info']['participants']  # Adjust based on actual response structure
+    
+    for participant in participants:
+        champion_id = participant['championId']  # Champion ID
+        team_id = participant['teamId']  # Team ID: 100 (team1) or 200 (team2)
+    
+        if team_id == 100:
+            team1_champions.append(champion_id)
+        elif team_id == 200:
+            team2_champions.append(champion_id)
+
+    print(team1_champions)
+    print(team2_champions)
+
+    
+    # Creates 2 separate records for each team
+    record1 = (match_id, datetime.now())
+    record2 = (match_id, datetime.now())
+    
+    return [record1, record2]
 
 
 
