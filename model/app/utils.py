@@ -16,6 +16,8 @@ import config
 importlib.reload(config)
 from app import lib
 importlib.reload(lib)
+from app import champ_mapping
+importlib.reload(champ_mapping)
 
 ### GLOBAL VARIABLES
 
@@ -959,8 +961,25 @@ def get_features_tc(match_id,  rate_limiter):
         elif team_id == 200:
             team2_champions.append(champion_id)
 
-    print(team1_champions)
-    print(team2_champions)
+    # AD-AP ratio
+    team1_adap_ratio = 0
+    team2_adap_ratio = 0
+    # Balanced ratio
+    team1_balance_ratio = 0
+    team2_balance_ratio = 0
+    
+    # Find AD-AP ratio based on champs
+    for i in range(5):
+        team1_adap_ratio += champ_mapping.map[team1_champions[i]]["adap"][0]
+        team2_adap_ratio += champ_mapping.map[team2_champions[i]]["adap"][0]
+
+    print(team1_adap_ratio / 5)
+    print(team2_adap_ratio / 5)
+    team1_adap_ratio = 2 * ((1 - abs((team1_adap_ratio / 5) - 0.5)) - 0.5)
+    team2_adap_ratio = 2 * ((1 - abs((team2_adap_ratio / 5) - 0.5)) - 0.5)
+
+    print(team1_adap_ratio)
+    print(team2_adap_ratio)
 
     
     # Creates 2 separate records for each team

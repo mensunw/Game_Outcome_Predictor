@@ -16,6 +16,7 @@ class Predict(APIView):
         if not is_correctly_formatted(name):
             return Response({"error": "Please ensure game name and tag line is valid"})
         
+        # todo: rate limit
         # Use RIOT API to get info on this person's live game
 
         # Check if there is a game
