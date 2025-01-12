@@ -935,7 +935,7 @@ def get_data_15(match_ids, rate_limiter, start_at=0):
 
 def get_features_tc(match_id,  rate_limiter):
     # gets all features for related to team composition for a game
-    # returns TWO rows!
+    # returns ONE row
     # ratio of all things for team 1, and ratio of all things for team2
     
     # get match details features
@@ -981,12 +981,8 @@ def get_features_tc(match_id,  rate_limiter):
     print(team1_adap_ratio)
     print(team2_adap_ratio)
 
-    
-    # Creates 2 separate records for each team
-    record1 = (match_id, datetime.now())
-    record2 = (match_id, datetime.now())
-    
-    return [record1, record2]
+ 
+    return true
 
 
 
