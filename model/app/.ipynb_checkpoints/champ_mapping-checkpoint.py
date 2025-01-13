@@ -1,5 +1,4 @@
 map = {
-    # AD-AD ratio, 
     1: {
         "name": "Annie",
         "adap": (0.05, 0.95),
@@ -108,7 +107,7 @@ map = {
     22: {
         "name": "Ashe",
         "adap": (0.9, 0.1),
-        "roles": ("ADC", "Engage", "Poke", "Bot")
+        "roles": ("ADC", "Engage", "Bot")
     }, 
     23: {
         "name": "Tryndamere",
@@ -488,7 +487,7 @@ map = {
     117: {
         "name": "Lulu",
         "adap": (0.1, 0.9),
-        "roles": ["Support", "Mage", "HS"]
+        "roles": ["Support", "Mage", "HS", "Disengage"]
     },  
     119: {
         "name": "Draven",
@@ -563,7 +562,7 @@ map = {
     147: {
         "name": "Seraphine",
         "adap": (0.05, 0.95),
-        "roles": ["Support", "Mid", "Mage", "HS", "Poke"]
+        "roles": ["Support", "Mid", "Mage", "HS", "Poke", "Bot"]
     },  
     150: {
         "name": "Gnar",
@@ -653,7 +652,7 @@ map = {
     236: {
         "name": "Lucian",
         "adap": (0.9, 0.1),
-        "roles": ["ADC", "Mid"]
+        "roles": ["ADC", "Mid", "Bot"]
     },
     238: {
         "name": "Zed",
@@ -818,7 +817,7 @@ map = {
     895: {
         "name": "Nilah",
         "adap": (0.95, 0.05),
-        "roles": ["ADC", "Bot", "Assassin", "Poke"]
+        "roles": ["ADC", "Bot"]
     },
     897: {
         "name": "K'Sante",
@@ -843,6 +842,6 @@ map = {
     950: {
         "name": "Naafiri",
         "adap": (0.95, 0.05),
-        "roles": ["ADC", "Mid", "Jungle", "Top", "Assassin"]
+        "roles": ["Mid", "Jungle", "Top", "Assassin"]
     },  
 }

@@ -5,6 +5,7 @@ import os
 import requests
 import time
 import sys
+import csv
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Semaphore
 import threading
@@ -33,13 +34,13 @@ NUM_SAMPLE_FOR_EACH_PLAYER = 3 # Too much will result in data skewed based on pa
 # Filler Data if API returns NONE or WR
 DEFAULT_WR = 0.45
 DEFAULT_MATCH_HISTORY = 19
-DEFAULT_CHAMP_MASTERY = 200000
+DEFAULT_CHAMP_MASTERY = 0
 
 # Ranks used for grabbing data from
 SAMPLE_RANKS = {
-    "PLATINUM"
-    "DIAMOND"
-    "EMERALD"
+    "SILVER",
+    "GOLD",
+    "PLATINUM",
 }
 DIVISIONS = {
     "I",
@@ -75,7 +76,7 @@ EXCLUDED_QUEUE_IDS = {
     # Add more queue IDs to exclude other game modes
 }
 
-UPDATED = 9
+UPDATED = 97
 
 ### FUNCTIONS
 
@@ -602,7 +603,7 @@ def read_match_ids():
         match_ids += [df.iloc[i].values[0]]
     return match_ids
 
-def is_duplicate_match_id(match_id):
+def is_duplicate_match_id(match_id, csv_file):
     """
     Checks the CSV file to see if a given match_id is already there
         Args:
@@ -610,12 +611,26 @@ def is_duplicate_match_id(match_id):
     """
     
     # Loading current CSV file if CSV already exists
-    if(os.path.isfile(CSV_FILE)):
-        df = pd.read_csv(CSV_FILE)
+    if(os.path.isfile(csv_file)):
+        df = pd.read_csv(csv_file)
         if(match_id in df['match_id'].values):
             print("dupe: matchid already in CSV")
             return True
     return False
+
+def store_match_ids(match_ids):
+    # Adds match ids to the current match ids file. If file does not exist create one here: 
+    # df_match_ids.to_csv(utils.MATCH_ID_FILE, index=False) for replacement
+
+    # Check for duplciate matches
+    unique_ids = []
+    for match_id in match_ids:
+        if not(is_duplicate_match_id(match_id, "./data/match_ids.csv")):
+            unique_ids.append(match_id)
+        else:
+            print(f'Warning: Duplicate match id detected when adding match_ids: {match_id}')
+    df_match_ids = pd.DataFrame(unique_ids)
+    df_match_ids.to_csv(MATCH_ID_FILE, index=False, mode='a', header=False)
 
 def get_data(match_ids, rate_limiter):
     """
@@ -629,7 +644,7 @@ def get_data(match_ids, rate_limiter):
     for match_id in match_ids:
         # Search current CSV file if match_id already exists
         print(f'On this match_id: {match_id}')
-        if not(is_duplicate_match_id(match_id)):
+        if not(is_duplicate_match_id(match_id, CSV_FILE)):
             currData = []
             match_id, time, avg_lvl_1, avg_mhl_1, avg_wr_1, sum_cm_1, avg_lvl_2, avg_mhl_2, avg_wr_2, sum_cm_2, win = get_features(match_id, rate_limiter)
             # Check if not remake or invalid match (3)
@@ -908,7 +923,7 @@ def get_data_15(match_ids, rate_limiter, start_at=0):
     for match_id in match_ids[start_at-1:]:
         # Search current CSV file if match_id already exists
         print(f'On this match_id: {match_id}')
-        if not(is_duplicate_match_id(match_id)):
+        if not(is_duplicate_match_id(match_id, CSV_FILE)):
             currData = []
             features = get_features_15(match_id, rate_limiter)
             if features is not None:
@@ -931,11 +946,48 @@ def get_data_15(match_ids, rate_limiter, start_at=0):
     print(f"Finished retrieving data")
     return None
 
+def remove_duplicates():
+    # Removes duplciates and stores them in a new csv file
+    
+    # Read the CSV file
+    with open(MATCH_ID_FILE, "r") as infile:
+        reader = list(csv.reader(infile))
+        header = reader[0]  # Get the header
+        data = reader[1:]   # Get the data rows
+
+    # Remove duplicates based on match_id
+    unique_data = []
+    for i in range(len(data)):
+        is_duplicate = False
+        for j in range(i):  # Compare with previous rows
+            if data[i][0] == data[j][0]:  # Assuming match_id is in the first column
+                is_duplicate = True
+                break
+        if not is_duplicate:
+            unique_data.append(data[i])
+
+    unique_data_dict = match_ids_to_dictionary(unique_data)
+    df = pd.DataFrame(unique_data_dict)
+    
+    if(os.path.isfile(MATCH_ID_FILE)):
+        # Use this one if DataFrame/CSV already exists
+        df.to_csv("./data/match_ids_new.csv", index=False, mode='a', header=False)
+    else:
+        # Use this one to create CSV for the first time
+        df.to_csv("./data/match_ids_new.csv", index=False)
+
+    # Write the deduplicated data to a new CSV file
+    with open("./data/match_ids_new.csv", "w", newline="") as outfile:
+        writer = csv.writer(outfile)
+        writer.writerow(header)  # Write the header
+        writer.writerows(unique_data)  # Write the unique rows
+    
+
 ### NEW FUNCTIONS FOR TEAM COMP ANALYZER
 
 def get_features_tc(match_id,  rate_limiter):
     # gets all features for related to team composition for a game
-    # returns ONE row
+    # returns TWO rows
     # ratio of all things for team 1, and ratio of all things for team2
     
     # get match details features
@@ -964,25 +1016,79 @@ def get_features_tc(match_id,  rate_limiter):
     # AD-AP ratio
     team1_adap_ratio = 0
     team2_adap_ratio = 0
-    # Balanced ratio
+    # Specific roles for each team
+    team1_roles_count = {
+        "Tank": 0,
+        "Engage": 0,
+        "Disengage": 0,
+        "ADC": 0,
+        "Mage": 0,
+        "Assassin": 0,
+        "Support": 0,
+        "Mid": 0,
+        "Top": 0,
+        "Jungle": 0,
+        "Bruiser": 0,
+        "Duelist": 0,
+        "Poke": 0,
+        "HS": 0 ,
+        "Bot": 0
+    }
+
+    team2_roles_count = {role: 0 for role in team1_roles_count}
+    # Balanced ratio (Checks for certain important factors for deciding a balanced team)
     team1_balance_ratio = 0
     team2_balance_ratio = 0
     
-    # Find AD-AP ratio based on champs
+    # Find the everything based on the champ mapping
     for i in range(5):
-        team1_adap_ratio += champ_mapping.map[team1_champions[i]]["adap"][0]
-        team2_adap_ratio += champ_mapping.map[team2_champions[i]]["adap"][0]
+        team1_cmapping = champ_mapping.map[team1_champions[i]]
+        team2_cmapping = champ_mapping.map[team2_champions[i]]
+        # ADAP ratio
+        team1_adap_ratio += team1_cmapping["adap"][0]
+        team2_adap_ratio += team2_cmapping["adap"][0]
+        print(team1_champions[i])
+        # Roles
+        for role in team1_cmapping["roles"]:
+            team1_roles_count[role] += 1
+        for role in team2_cmapping["roles"]:
+            team2_roles_count[role] += 1
 
-    print(team1_adap_ratio / 5)
-    print(team2_adap_ratio / 5)
     team1_adap_ratio = 2 * ((1 - abs((team1_adap_ratio / 5) - 0.5)) - 0.5)
     team2_adap_ratio = 2 * ((1 - abs((team2_adap_ratio / 5) - 0.5)) - 0.5)
+    
+    # Assigns balance points based on certain criteria
+    team1_balance_points = 0
+    team2_balance_points = 0
+    # At least one tank
+    if team1_roles_count["Tank"] > 0:
+        team1_balance_points += 1
+    if team2_roles_count["Tank"] > 0:
+        team2_balance_points += 1
+    # At least one engage/disengage
+    if team1_roles_count["Engage"] > 0 or team1_roles_count["Disengage"] > 0:
+        team1_balance_points += 1
+    if team2_roles_count["Engage"] > 0 or team2_roles_count["Disengage"] > 0:
+        team2_balance_points += 1
+    # At least one backline damage dealer
+    if team1_roles_count["Mage"] > 0 or team1_roles_count["ADC"] > 0:
+        team1_balance_points += 2
+    if team2_roles_count["Mage"] > 0 or team2_roles_count["ADC"] > 0:
+        team2_balance_points += 2
+    # All roles filled
+    if team1_roles_count["Top"] > 0 and team1_roles_count["Bot"] > 0 and team1_roles_count["Mid"] > 0 and team1_roles_count["Jungle"] > 0 and team1_roles_count["Support"] > 0:
+        team1_balance_points += 1
+    if team2_roles_count["Top"] > 0 and team2_roles_count["Bot"] > 0 and team2_roles_count["Mid"] > 0 and team2_roles_count["Jungle"] > 0 and team2_roles_count["Support"] > 0:
+        team2_balance_points += 1
 
-    print(team1_adap_ratio)
-    print(team2_adap_ratio)
+    team1_balance_ratio = team1_balance_points / 5
+    team2_balance_ratio = team2_balance_points / 5
+    
+    
+    print(team1_balance_ratio)
+    print(team2_balance_ratio)
 
- 
-    return true
+    return True
 
 
 
