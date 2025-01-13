@@ -465,7 +465,7 @@ map = {
         "name": "Leona",
         "adap": (0.1, 0.9),
         "roles": ["Support", "Engage", "Tank"],
-        "cc": 7.5,
+        "cc": 8,
     },  
     90: {
         "name": "Malzahar",

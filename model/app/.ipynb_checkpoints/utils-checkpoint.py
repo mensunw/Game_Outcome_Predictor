@@ -1039,6 +1039,9 @@ def get_features_tc(match_id,  rate_limiter):
     # Balanced ratio (Checks for certain important factors for deciding a balanced team)
     team1_balance_ratio = 0
     team2_balance_ratio = 0
+    # CC sum
+    team1_cc_ratio = 0
+    team2_cc_ratio = 0
     
     # Find the everything based on the champ mapping
     for i in range(5):
@@ -1047,12 +1050,14 @@ def get_features_tc(match_id,  rate_limiter):
         # ADAP ratio
         team1_adap_ratio += team1_cmapping["adap"][0]
         team2_adap_ratio += team2_cmapping["adap"][0]
-        print(team1_champions[i])
         # Roles
         for role in team1_cmapping["roles"]:
             team1_roles_count[role] += 1
         for role in team2_cmapping["roles"]:
             team2_roles_count[role] += 1
+        # CC ratio
+        team1_cc_ratio += team1_cmapping["cc"]
+        team2_cc_ratio += team2_cmapping["cc"]
 
     team1_adap_ratio = 2 * ((1 - abs((team1_adap_ratio / 5) - 0.5)) - 0.5)
     team2_adap_ratio = 2 * ((1 - abs((team2_adap_ratio / 5) - 0.5)) - 0.5)
@@ -1085,8 +1090,8 @@ def get_features_tc(match_id,  rate_limiter):
     team2_balance_ratio = team2_balance_points / 5
     
     
-    print(team1_balance_ratio)
-    print(team2_balance_ratio)
+    print(team1_cc_ratio)
+    print(team2_cc_ratio)
 
     return True
 
