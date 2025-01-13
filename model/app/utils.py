@@ -1047,7 +1047,6 @@ def get_features_tc(match_id,  rate_limiter):
         # ADAP ratio
         team1_adap_ratio += team1_cmapping["adap"][0]
         team2_adap_ratio += team2_cmapping["adap"][0]
-        print(team1_champions[i])
         # Roles
         for role in team1_cmapping["roles"]:
             team1_roles_count[role] += 1
