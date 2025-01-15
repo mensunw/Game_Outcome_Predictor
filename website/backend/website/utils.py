@@ -1,4 +1,6 @@
 import re
+from joblib import load
+model = load("./exported_model.joblib")
 
 def is_correctly_formatted(input_str):
     """
