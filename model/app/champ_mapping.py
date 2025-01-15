@@ -14,7 +14,7 @@ map = {
     3: {
         "name": "Galio",
         "adap": (0.1, 0.9),
-        "roles": ("Tank", "Support", "Mid", "Burst", "Engage", "Disengage"),
+        "roles": ("Tank", "Support", "Mid", "Engage", "Disengage"),
         "cc": 7.5,
     },
     4: {
@@ -686,7 +686,7 @@ map = {
     154: {
         "name": "Zac",
         "adap": (0.1, 0.9),
-        "roles": ["Jungle", "Tank", "Engage"],
+        "roles": ["Jungle", "Tank", "Engage", "Top"],
         "cc": 7,
     }, 
     157: {
@@ -860,7 +860,7 @@ map = {
     421: {
         "name": "Rek'Sai",
         "adap": (0.9, 0.1),
-        "roles": ["Jungle", "Assassin", "Brusier"],
+        "roles": ["Jungle", "Assassin", "Bruiser"],
         "cc": 2.5,
     },  
     427: {

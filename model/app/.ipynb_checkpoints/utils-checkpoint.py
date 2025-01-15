@@ -985,6 +985,23 @@ def remove_duplicates():
 
 ### NEW FUNCTIONS FOR TEAM COMP ANALYZER
 
+def features_to_dictionary_dynamic(feature_names, feature_values):
+    """
+    Converts a list of feature names and their corresponding values into a dictionary record.
+
+    Args: 
+        feature_names: List of strings representing feature names
+        feature_values: List of values corresponding to the feature names
+    Returns:
+        dictionary(features): A dictionary with each feature name mapped to the corresponding value
+    """
+    if len(feature_names) != len(feature_values):
+        raise ValueError("The number of feature names must match the number of feature values.")
+    
+    # Create the dictionary by zipping feature names and values
+    features_record = dict(zip(feature_names, feature_values))
+    return features_record
+
 def get_features_tc(match_id,  rate_limiter):
     # gets all features for related to team composition for a game
     # returns TWO rows
@@ -1040,8 +1057,8 @@ def get_features_tc(match_id,  rate_limiter):
     team1_balance_ratio = 0
     team2_balance_ratio = 0
     # CC sum
-    team1_cc_ratio = 0
-    team2_cc_ratio = 0
+    team1_cc_sum = 0
+    team2_cc_sum = 0
     
     # Find the everything based on the champ mapping
     for i in range(5):
@@ -1056,8 +1073,8 @@ def get_features_tc(match_id,  rate_limiter):
         for role in team2_cmapping["roles"]:
             team2_roles_count[role] += 1
         # CC ratio
-        team1_cc_ratio += team1_cmapping["cc"]
-        team2_cc_ratio += team2_cmapping["cc"]
+        team1_cc_sum += team1_cmapping["cc"]
+        team2_cc_sum += team2_cmapping["cc"]
 
     team1_adap_ratio = 2 * ((1 - abs((team1_adap_ratio / 5) - 0.5)) - 0.5)
     team2_adap_ratio = 2 * ((1 - abs((team2_adap_ratio / 5) - 0.5)) - 0.5)
@@ -1088,28 +1105,53 @@ def get_features_tc(match_id,  rate_limiter):
 
     team1_balance_ratio = team1_balance_points / 5
     team2_balance_ratio = team2_balance_points / 5
-    
-    
-    print(team1_cc_ratio)
-    print(team2_cc_ratio)
 
-    return True
+    # Find who won
+    winning_team = -1
+    teams = data['info']['teams']
+    for team in teams:
+        if team['win']: 
+            winning_team = team['teamId']  
+            break
+    if(winning_team == -1):
+        print(f'Returned no winning team: {match_id}')
+        return None
 
+    # Creates 2 separate records for each team
+    record1 = (match_id, datetime.now(), team1_adap_ratio, team1_balance_ratio, team1_cc_sum, team1_roles_count["Tank"], team1_roles_count["Engage"], team1_roles_count["Disengage"], team1_roles_count["ADC"], team1_roles_count["Mage"], team1_roles_count["Assassin"], team1_roles_count["Support"], team1_roles_count["Mid"], team1_roles_count["Top"], team1_roles_count["Jungle"], team1_roles_count["Bruiser"], team1_roles_count["Duelist"], team1_roles_count["Poke"], team1_roles_count["HS"], team1_roles_count["Bot"], 1 if winning_team == 100 else 0)
+    record2 = (match_id, datetime.now(), team2_adap_ratio, team2_balance_ratio, team2_cc_sum, team2_roles_count["Tank"], team2_roles_count["Engage"], team2_roles_count["Disengage"], team2_roles_count["ADC"], team2_roles_count["Mage"], team2_roles_count["Assassin"], team2_roles_count["Support"], team2_roles_count["Mid"], team2_roles_count["Top"], team2_roles_count["Jungle"], team2_roles_count["Bruiser"], team2_roles_count["Duelist"], team2_roles_count["Poke"], team2_roles_count["HS"], team2_roles_count["Bot"], 1 if winning_team == 200 else 0)
+    return [record1, record2]
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+def get_data_dynamic(match_ids, rate_limiter, start_at=0):
+    """
+        Retrieves data/features for the match ids
+            Args:
+                match_ids: List of objects representing match ids
+                rate_limiter: RateLimiter object representing API call limits
+            Returns:
+                None
+    """
+    for match_id in match_ids[start_at:]:
+        # Search current CSV file if match_id already exists
+        print(f'On this match_id: {match_id}')
+        if not(is_duplicate_match_id(match_id, CSV_FILE)):
+            currData = []
+            features = get_features_tc(match_id, rate_limiter)
+            if features is not None:
+                features1 = features[0]
+                features2 = features[1]
+                record0 = features_to_dictionary_dynamic(["match_id", "time", "adap_ratio", "balance_ratio", "cc_sum", "tank", "engage", "disengage", "adc", "mage", "assassin", "support", "mid", "top", "jungle", "bruiser", "duelist", "poke", "hs", "bot", "win"], features1)
+                record1 = features_to_dictionary_dynamic(["match_id", "time", "adap_ratio", "balance_ratio", "cc_sum", "tank", "engage", "disengage", "adc", "mage", "assassin", "support", "mid", "top", "jungle", "bruiser", "duelist", "poke", "hs", "bot", "win"], features2)
+                currData.append(record0)
+                currData.append(record1)
+                # Write to CSV/create a new one to save progress
+                df = pd.DataFrame(currData)
+                if(os.path.isfile(CSV_FILE)):
+                    # Use this one if DataFrame/CSV already exists
+                    df.to_csv(CSV_FILE, index=False, mode='a', header=False)
+                else:
+                    # Use this one to create CSV for the first time
+                    df.to_csv(CSV_FILE, index=False)
+    print(f"Finished retrieving data")
+    return None
     
