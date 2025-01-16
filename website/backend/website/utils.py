@@ -21,3 +21,15 @@ def is_correctly_formatted(input_str):
     pattern = r'^.{3,16}#.{3,5}$'
     # Use re.fullmatch to check if the string matches the pattern
     return bool(re.fullmatch(pattern, input_str))
+
+def predict_game(features):
+    """
+    Predict the outcome using the loaded model.
+    Args:
+        features (list): A list or numpy array of input features.
+    Returns:
+        bool: The model's prediction.
+    """
+    
+    prediction = model.predict(features)
+    return prediction

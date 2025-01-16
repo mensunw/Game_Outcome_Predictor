@@ -14,7 +14,7 @@ const ResultPage: React.FC = () => {
     if (!data) {
         notFound(); // Triggers the built-in 404 page
     }
-    const result = data;
+    const result = data === 'true';
 
     return (
         <>
@@ -22,13 +22,13 @@ const ResultPage: React.FC = () => {
             {result ? (
                 <Card className="ml-[30%] mr-[30%] mt-[1%] mb-8 bg-green-300">
                     <CardTitle className="flex justify-center p-6 text-5xl font-black">
-                        WIN (97%)
+                        WIN (53%)
                     </CardTitle>
                 </Card>
             ) :
                 <Card className="ml-[30%] mr-[30%] mt-[1%] mb-8 bg-red-300">
                     <CardTitle className="flex justify-center p-6 text-5xl font-black">
-                        LOSE (97%)
+                        LOSE (51%)
                     </CardTitle>
                 </Card>
             }

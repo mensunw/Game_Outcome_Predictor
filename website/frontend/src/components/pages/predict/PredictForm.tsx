@@ -54,8 +54,8 @@ export default function ProfileForm() {
             ).json()
             const { result, error } = response
 
-            if (result) {
-                const queryString = `data=${encodeURIComponent(JSON.stringify(result))}`;
+            if (result || result == false) {
+                const queryString = `data=${encodeURIComponent(result)}`;
                 router.push(`/predict/result?${queryString}`);
             }
 

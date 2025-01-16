@@ -7,8 +7,12 @@ name = "pypi"
 django = "*"
 djangorestframework = "*"
 django-cors-headers = "*"
+joblib = "*"
+scikit-learn = "*"
+numpy = "*"
+pandas = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.6"
+python_version = "3.12"
