@@ -22,6 +22,12 @@ def is_correctly_formatted(input_str):
     # Use re.fullmatch to check if the string matches the pattern
     return bool(re.fullmatch(pattern, input_str))
 
+def get_features(username):
+    """
+    Checks if there is a live game based on this username and returns its features if so
+    """
+    
+
 def predict_game(features):
     """
     Predict the outcome using the loaded model.

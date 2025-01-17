@@ -8,8 +8,7 @@ export default function Headline() {
                             Make a Prediction
                         </h2>
                         <p className="text-p1 mx-auto max-w-[600px] text-muted-foreground md:text-xl font-body">
-                            Ready to take your gameplay strategy to the next level? Look no further than the FF Detector! With its advanced prediction capabilities, you can make informed decisions in your games and maximize your win potential right from the 15-minute mark.
-                        </p>
+                            Ready to take your gameplay strategy to the next level? Look no further than the Dodge Detector! With its advanced prediction capabilities, you can make informed decisions before the game even begins and dodge unfavorable matchups with ease.                        </p>
 
                     </div>
 

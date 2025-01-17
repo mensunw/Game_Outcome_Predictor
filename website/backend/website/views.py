@@ -20,6 +20,7 @@ class Predict(APIView):
         
         # todo: rate limit
         # Use RIOT API to get info on this person's live game
+        get_features(name)
 
         # Check if there is a game & get feature details
         features = np.array([[0.52, 0.4, 8.0, 0, 0, 0,0, 4, 3, 0, 4, 3,0, 1, 1, 3, 0,0]])

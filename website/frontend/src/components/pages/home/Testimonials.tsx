@@ -114,7 +114,7 @@ export default function Testimonials() {
                         Optimize Your Gameplay with the Dodge Detector
                     </h2>
                     <p className="mt-2 w-3/4 text-lg text-muted-foreground">
-                        Effortlessly predict your game’s outcome within the first 15 minutes and make informed decisions to surrender or keep pushing for victory.
+                        Effortlessly predict the likelihood of a challenging match with the Dodge Detector and make informed decisions to dodge the queue or face your opponents with confidence.
                     </p>
                 </div>
 
@@ -157,7 +157,7 @@ export default function Testimonials() {
                         Unlock the Power of Precision
                     </h2>
                     <p className="mt-2 w-3/4 text-lg text-muted-foreground">
-                        Ready to level up your gameplay? Discover the FF Detector, your ultimate tool for predicting game outcomes with unmatched accuracy!
+                        Ready to take your gameplay strategy to the next level? Look no further than the Dodge Detector! With its advanced prediction capabilities, you can make informed decisions before the game even begins and dodge unfavorable matchups with ease.
                     </p>
 
                     <Button className="mt-2"> Get Started For Free > </Button>

@@ -90,7 +90,7 @@ export default function ProfileForm() {
                                 <Input placeholder="Game Name + Tag Line" {...field} className="w-96" />
                             </FormControl>
                             <FormDescription>
-                                *please ensure your game has reached the 15-minute mark
+                                *please ensure your game has just started
                             </FormDescription>
                             <FormMessage />
                         </FormItem>

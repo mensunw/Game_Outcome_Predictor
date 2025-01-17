@@ -115,7 +115,7 @@ def apiCallHandler(request_url, rate_limiters):
     while response.status_code != 200: # while loop here for later when we want to ignore error 429
         # Retry limiter
         if(numFailedRetries >= 2):
-            sys.exit(f"Exceeded retry limit of {numRetries}")
+            sys.exit(f"Exceeded retry limit of 2")
             
         if(response.status_code == 429):
             # Not success but is 429 API limit error
@@ -674,75 +674,98 @@ def get_live_features(summoner_id, rate_limiter):
             rate_limiter: RateLimiter Object for API rate limits
 
         Returns:
-            tuple(...): Tuple representing (match_id, time, avg_lvl_a, avg_mhl_a, avg_wr_a, sum_cm_a, avg_lvl_e, avg_mhl_e, avg_wr_e, sum_cm_e) where datatypes are (Object, Object, float, float, float, int, float, float, float, sum, -1), win should be unknown outcome 
+            tuple(...): Tuple representing (..., -1), win should be unknown outcome 
             tuple(..., win=3): If match_info is None 
     """
-    
+
+    # Each participant is a list of participants
     match_info = apiCallHandler(f'https://na1.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/{summoner_id}', [rate_limiter])
-    if(match_info == None):
-        # API Handler returned None, couldn't get data on match
-        return (summoner_id, datetime.now(), 0, 0, 0, 0, 0, 0, 0, 0, 3)
+    if match_info == None:
+        return None
+    participants = match_info['participants']
 
-    # Each participant is a list of participants which contain the PUUID among data
-    players = match_info['participants']
+    # Get ally team
+    team = -1
+    for participant in participants:
+        if(participant['puuid'] == summoner_id):
+            team = participant['teamId']
+    if team == -1:
+        return None
     
-    # Ally team
-    avg_lvl_a = 0
-    avg_mhl_a = 0
-    avg_wr_a = 0
-    sum_cm_a = 0
-    total_a = 0
+    # Get champions played for team
+    team_champions = []
     
-    # Enemy team
-    avg_lvl_e = 0
-    avg_mhl_e = 0
-    avg_wr_e = 0
-    sum_cm_e = 0
-    total_e = 0
+    for participant in participants:
+        champion_id = participant['championId'] 
+        team_id = participant['teamId']  # Team ID: 100 (team1) or 200 (team2)
+    
+        if team_id == team:
+            team_champions.append(champion_id)
 
-    # Unknown winner in live game
-    win = -1
+    # AD-AP ratio
+    team_adap_ratio = 0
+    # Specific roles for each team
+    team_roles_count = {
+        "Tank": 0,
+        "Engage": 0,
+        "Disengage": 0,
+        "ADC": 0,
+        "Mage": 0,
+        "Assassin": 0,
+        "Support": 0,
+        "Mid": 0,
+        "Top": 0,
+        "Jungle": 0,
+        "Bruiser": 0,
+        "Duelist": 0,
+        "Poke": 0,
+        "HS": 0 ,
+        "Bot": 0
+    }
+
+    # Balanced ratio (Checks for certain important factors for deciding a balanced team)
+    team_balance_ratio = 0
+    # CC sum
+    team_cc_sum = 0
     
-    if win != 3:
-        for index in range(len(players)): 
-            # Get championID of each player
-            champion_id = players[index]['championId']
+    # Find the everything based on the champ mapping
+    for i in range(5):
+        team_cmapping = champ_mapping.map[team_champions[i]]
+        # ADAP ratio
+        team_adap_ratio += team_cmapping["adap"][0]
+        # Roles
+        for role in team_cmapping["roles"]:
+            team_roles_count[role] += 1
+        # CC ratio
+        team_cc_sum += team_cmapping["cc"]
+
+    team_adap_ratio = 2 * ((1 - abs((team_adap_ratio / 5) - 0.5)) - 0.5)
+    
+    # Assigns balance points based on certain criteria
+    team_balance_points = 0
+    # At least one tank
+    if team_roles_count["Tank"] > 0:
+        team_balance_points += 1
+    # At least one engage/disengage
+    if team_roles_count["Engage"] > 0 or team_roles_count["Disengage"] > 0:
+        team_balance_points += 1
+    # At least one backline damage dealer
+    if team_roles_count["Mage"] > 0 or team_roles_count["ADC"] > 0:
+        team_balance_points += 2
+    # All roles filled
+    if team_roles_count["Top"] > 0 and team_roles_count["Bot"] > 0 and team_roles_count["Mid"] > 0 and team_roles_count["Jungle"] > 0 and team_roles_count["Support"] > 0:
+        team_balance_points += 1
+
+    team_balance_ratio = team_balance_points / 5
+
+    # Creates 2 separate records for each team
+    record = (team_adap_ratio, team_balance_ratio, team_cc_sum, team_roles_count["Tank"], team_roles_count["Engage"], team_roles_count["Disengage"], team_roles_count["ADC"], team_roles_count["Mage"], team_roles_count["Assassin"], team_roles_count["Support"], team_roles_count["Mid"], team_roles_count["Top"], team_roles_count["Jungle"], team_roles_count["Bruiser"], team_roles_count["Duelist"], team_roles_count["Poke"], team_roles_count["HS"], team_roles_count["Bot"])
+    return record
+
+    
+    
             
-            status, level, match_history_length, wr, champ_mastery = get_summoner_features(players[index]['puuid'], champion_id, rate_limiter)
-
-            if status == True:
-                if(index < 5):
-                    avg_lvl_a += level
-                    avg_mhl_a += match_history_length
-                    avg_wr_a += wr
-                    sum_cm_a += champ_mastery
-                    total_a +=1
-                elif(index >= 5):
-                    avg_lvl_e += level
-                    avg_mhl_e += match_history_length
-                    avg_wr_e += wr
-                    sum_cm_e += champ_mastery
-                    total_e +=1
-                else:
-                    print("Error: Shouldn't be here")
-            else:
-                # get_summoner_features returned None/False
-                print("Warning: get_summoner_features returned None/False")
-                if(index < 5):
-                    total_a -= 1
-                else:
-                    total_e -= 1
-                
-        avg_lvl_a = round(avg_lvl_a / total_a, 2)
-        avg_mhl_a = round(avg_mhl_a / total_a, 2)
-        avg_wr_a = round(avg_wr_a / total_a, 2)
-        
-        avg_lvl_e = round(avg_lvl_e / total_e, 2)
-        avg_mhl_e = round(avg_mhl_e / total_e, 2)
-        avg_wr_e = round(avg_wr_e / total_e, 2)
-        
-        
-    return (summoner_id, datetime.now(), avg_lvl_a, avg_mhl_a, avg_wr_a, sum_cm_a, avg_lvl_e, avg_mhl_e, avg_wr_e, sum_cm_e, win)
+           
 
 def live_features_to_dictionary(summoner_id, time, avg_lvl_a, avg_mhl_a, avg_wr_a, sum_cm_a, avg_lvl_e, avg_mhl_e, avg_wr_e, sum_cm_e, win):
     """
@@ -795,7 +818,7 @@ def get_live_data(summoner_id, rate_limiter):
     """
     
     summoner_id, time, avg_lvl_1, avg_mhl_1, avg_wr_1, sum_cm_1, avg_lvl_2, avg_mhl_2, avg_wr_2, sum_cm_2, win = get_live_features(summoner_id, rate_limiter)
-    # Check if not invalid match (3)
+    # Check if not invalid match (-1)
     if(win == -1):
         return live_features_to_dictionary(summoner_id, time, avg_lvl_1, avg_mhl_1, avg_wr_1, sum_cm_1, avg_lvl_2, avg_mhl_2, avg_wr_2, sum_cm_2, win)
     return None
