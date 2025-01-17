@@ -111,7 +111,7 @@ export default function Testimonials() {
                 {/* Title and Description */}
                 <div className="mb-8 flex flex-col items-center">
                     <h2 className="text-3xl font-bold tracking-tight">
-                        Optimize Your Gameplay with the FF Detector
+                        Optimize Your Gameplay with the Dodge Detector
                     </h2>
                     <p className="mt-2 w-3/4 text-lg text-muted-foreground">
                         Effortlessly predict your game’s outcome within the first 15 minutes and make informed decisions to surrender or keep pushing for victory.
@@ -152,7 +152,7 @@ export default function Testimonials() {
                     <div className="pointer-events-none absolute inset-y-0 right-0 w-1/3 bg-gradient-to-l from-background"></div>
                 </div>
                 {/* Get Started Section */}
-                <div className="mb-8 flex flex-col items-center">
+                <div className="flex flex-col items-center mt-8">
                     <h2 className="text-3xl font-bold tracking-tight">
                         Unlock the Power of Precision
                     </h2>
@@ -160,7 +160,7 @@ export default function Testimonials() {
                         Ready to level up your gameplay? Discover the FF Detector, your ultimate tool for predicting game outcomes with unmatched accuracy!
                     </p>
 
-                    <Button> Get Started For Free > </Button>
+                    <Button className="mt-2"> Get Started For Free > </Button>
                 </div>
             </section>
         </Card>
