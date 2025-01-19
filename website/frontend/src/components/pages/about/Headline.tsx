@@ -9,7 +9,7 @@ export default function Headline() {
                         </h2>
                         <p className="text-p1 mx-auto max-w-[800px] text-muted-foreground md:text-xl font-body">
                             Since discovering League of Legends in 2021 and diving into the fascinating world
-                            of machine learning in 2023, I've always envisioned merging these two passions.
+                            of machine learning in 2023, I&aposve always envisioned merging these two passions.
                             And after learning how to develop a full-stack application, I decided to bring this
                             idea to life by creating an interface that combines competitive gaming and artificial intelligence, allowing others to experience predictive
                             modeling firsthand.

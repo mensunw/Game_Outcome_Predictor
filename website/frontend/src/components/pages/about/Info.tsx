@@ -1,6 +1,6 @@
 "use client";
 import InView from "@/components/ui/in-view";
-import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Card, CardTitle } from '@/components/ui/card'
 
 export default function Info() {
     return (

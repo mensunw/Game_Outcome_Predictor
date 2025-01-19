@@ -1,14 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { useSearchParams, notFound } from 'next/navigation';
-import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Card, CardTitle } from '@/components/ui/card'
 import Headline from "@/components/pages/predict/result/Headline";
+
+export const dynamic = "force-dynamic";
 
 const ResultPage: React.FC = () => {
 
-    const router = useRouter()
     const searchParams = useSearchParams();
     const data = searchParams.get('data');
     if (!data) {

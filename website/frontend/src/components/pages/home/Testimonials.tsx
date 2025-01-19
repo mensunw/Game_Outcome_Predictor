@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 import Marquee from '@/components/ui/marquee'
-import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 
 const reviews = [
@@ -160,7 +160,7 @@ export default function Testimonials() {
                         Ready to take your gameplay strategy to the next level? Look no further than the Dodge Detector! With its advanced prediction capabilities, you can make informed decisions before the game even begins and dodge unfavorable matchups with ease.
                     </p>
 
-                    <Button className="mt-2"> Get Started For Free > </Button>
+                    <Button className="mt-2"> Get Started For Free &gt </Button>
                 </div>
             </section>
         </Card>

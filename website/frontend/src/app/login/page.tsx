@@ -1,6 +1,6 @@
 'use client'
 
-import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
+import { Card, CardTitle } from '@/components/ui/card'
 
 const ResultPage: React.FC = () => {
 

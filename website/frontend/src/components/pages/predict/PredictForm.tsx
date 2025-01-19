@@ -11,13 +11,13 @@ import {
     FormDescription,
     FormField,
     FormItem,
-    FormLabel,
     FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { useToast } from '@/hooks/use-toast'
-import { useEffect, useState } from 'react'
+//import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+//import { LoadingSpinner } from '@/components/ui/loading'
 
 const formSchema = z.object({
     username: z.string().min(2, {
@@ -29,6 +29,7 @@ export default function ProfileForm() {
 
     const { toast } = useToast()
     const router = useRouter()
+    //const [loading, setLoading] = useState(false);
 
     // 1. Define your form.
     const form = useForm<z.infer<typeof formSchema>>({
@@ -41,9 +42,11 @@ export default function ProfileForm() {
     // 2. Define a submit handler.
     async function onSubmit(values: z.infer<typeof formSchema>) {
         // Call backend to check and predict the outcome using the model
+        //setLoading(true);
+        //console.log("test: ", process.env.REACT_APP_BACKEND_URL)
         try {
             const response = await (
-                await fetch("http://127.0.0.1:8000/predict/",
+                await fetch(`${process.env.REACT_APP_BACKEND_URL}/predict/`,
                     {
                         method: 'POST',
                         headers: {
@@ -75,6 +78,8 @@ export default function ProfileForm() {
                 description: "There was a problem with your request.",
             })
             console.error("Error fetching from backend:", error);
+        } finally {
+            //setLoading(false);
         }
     }
 

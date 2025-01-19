@@ -1,4 +1,3 @@
-import { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import Image from 'next/image'
 
 export default function Hero() {
