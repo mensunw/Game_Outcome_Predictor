@@ -12,6 +12,7 @@ scikit-learn = "*"
 numpy = "*"
 pandas = "*"
 requests = "*"
+python-dotenv = "*"
 
 [dev-packages]
 
