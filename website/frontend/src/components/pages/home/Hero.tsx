@@ -2,8 +2,8 @@ import Image from 'next/image'
 
 export default function Hero() {
     return (
-        <section className="w-full p-6 pt-16 pb-12">
-            <div className="container px-4 md:px-6">
+        <section className="flex flex-col p-6 pt-16 pb-12 items-center">
+            <div className="container px-4">
                 <div className="flex flex-col items-center space-y-6 mb-6 text-center">
                     <div className="space-y-4">
                         <h2 className="text-5xl font-black stracking-tight max-w-[600px]">
