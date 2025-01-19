@@ -4,8 +4,6 @@ import { useSearchParams, notFound } from 'next/navigation';
 import { Card, CardTitle } from '@/components/ui/card'
 import Headline from "@/components/pages/predict/result/Headline";
 
-export const dynamic = "force-dynamic";
-
 const ResultPage: React.FC = () => {
 
     const searchParams = useSearchParams();
