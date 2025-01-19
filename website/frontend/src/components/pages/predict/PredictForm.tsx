@@ -43,10 +43,10 @@ export default function ProfileForm() {
     async function onSubmit(values: z.infer<typeof formSchema>) {
         // Call backend to check and predict the outcome using the model
         //setLoading(true);
-        //console.log("test: ", process.env.REACT_APP_BACKEND_URL)
+        console.log("test: ", process.env.NEXT_PUBLIC_BACKEND_URL)
         try {
             const response = await (
-                await fetch(`${process.env.REACT_APP_BACKEND_URL}/predict/`,
+                await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/predict/`,
                     {
                         method: 'POST',
                         headers: {
