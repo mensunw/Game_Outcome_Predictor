@@ -6,10 +6,14 @@ from .utils import *
 import numpy as np
 import pandas as pd
 
+# Rate limiter
+# TODO: switch to single rate limit calls later
+rate_limiter = RateLimiter_Method([(97, 160)])
+
 class Predict(APIView):
     def post(self, request):
         '''
-            something here
+            Takes in a prediction request and either returns Rate Limit error, Player not found error, or Match not started error
         '''
 
         name = (request.data['username'])
@@ -18,9 +22,17 @@ class Predict(APIView):
         if not is_correctly_formatted(name):
             return Response({"error": "Please ensure game name and tag line is valid"})
         
-        # todo: rate limit
+        # Rate limit check
+        try:
+            rate_limiter.acquire()
+        except Exception as e:
+            return Response({"error": e}, status=429)
+
         # Use RIOT API to get info on this person's live game
-        features_tuple = get_features(name)
+        try:
+            features_tuple = get_features(name)
+        except Exception as e:
+            return Response({"error": str(e)})
         features = np.array(features_tuple, ndmin=2)
 
         # Check if there is a game & get feature details

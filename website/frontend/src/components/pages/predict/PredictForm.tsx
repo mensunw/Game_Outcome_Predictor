@@ -62,7 +62,7 @@ export default function ProfileForm() {
             if (error) {
                 toast({
                     variant: "destructive",
-                    title: "Invalid game name and tag line.",
+                    title: "Invalid request",
                     description: error,
                 })
             }

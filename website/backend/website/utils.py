@@ -1,6 +1,9 @@
 import re
 from django.conf import settings
 import requests
+import threading
+import time
+from collections import deque
 from joblib import load
 import urllib.parse
 model = load("./exported_model.joblib")
@@ -32,9 +35,13 @@ def get_features(username):
     nameTag_split = username.split("#")
     gameName = nameTag_split[0]
     tagLine = nameTag_split[1]
-    summoner_id = get_puuid(gameName, tagLine)
+    try:
+        summoner_id = get_puuid(gameName, tagLine)
+        features = get_live_features(summoner_id)
+    except Exception as e:
+        raise Exception(e)
     # Gets the live data
-    return get_live_features(summoner_id)
+    return features
 
 def predict_game(features):
     """
@@ -58,7 +65,10 @@ def get_puuid(name, tag):
                 String: represents player's PUUID
     """
     parsed_name = urllib.parse.quote(name)
-    player_info = apiCallHandler(f'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{parsed_name}/{tag}')
+    try:
+        player_info = apiCallHandler(f'https://americas.api.riotgames.com/riot/account/v1/accounts/by-riot-id/{parsed_name}/{tag}')
+    except Exception as e:
+        raise Exception(e)
     return player_info['puuid']
 
 def apiCallHandler(request_url):
@@ -83,26 +93,19 @@ def apiCallHandler(request_url):
     
     response = requests.get(request_url, headers=headers)
 
-    numFailedRetries = 0
-    while response.status_code != 200: # while loop here for later when we want to ignore error 429
-        # Retry limiter
-        if(numFailedRetries >= 2):
-            print(f"Exceeded retry limit of 2")
-            return None
-            
+    if response.status_code != 200:        
         if(response.status_code == 429):
             # Not success but is 429 API limit error
-            print("Status 429 detected")
-            return None
+            raise Exception("Rate limit detected from Riot")
         elif(response.status_code == 404):
             # Data not found
             print("Error: Data not found")
-            return None
+            raise Exception("No data found")
         else:
             # Not success and not 429 API limit error
             print(f"Failed to fetch data: {response.status_code}")
             print(f'Request url: {request_url}')
-            return None
+            raise Exception(f"Bad request")
         
     # (finally) status of 200
     #debug2 = response.headers.get("X-App-Rate-Limit-Count")
@@ -124,9 +127,10 @@ def get_live_features(summoner_id):
     """
 
     # Each participant is a list of participants
-    match_info = apiCallHandler(f'https://na1.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/{summoner_id}')
-    if match_info == None:
-        return None
+    try:
+        match_info = apiCallHandler(f'https://na1.api.riotgames.com/lol/spectator/v5/active-games/by-summoner/{summoner_id}')
+    except Exception as e:
+        raise Exception(e)
     participants = match_info['participants']
 
     # Get ally team
@@ -135,7 +139,7 @@ def get_live_features(summoner_id):
         if(participant['puuid'] == summoner_id):
             team = participant['teamId']
     if team == -1:
-        return None
+        raise Exception("Cat: TEAM NOT FOUND?")
     
     # Get champions played for team
     team_champions = []
@@ -206,6 +210,46 @@ def get_live_features(summoner_id):
     # Creates 2 separate records for each team
     record = (team_adap_ratio, team_balance_ratio, team_cc_sum, team_roles_count["Tank"], team_roles_count["Engage"], team_roles_count["Disengage"], team_roles_count["ADC"], team_roles_count["Mage"], team_roles_count["Assassin"], team_roles_count["Support"], team_roles_count["Mid"], team_roles_count["Top"], team_roles_count["Jungle"], team_roles_count["Bruiser"], team_roles_count["Duelist"], team_roles_count["Poke"], team_roles_count["HS"], team_roles_count["Bot"])
     return record
+
+class RateLimiter_Method:
+    """
+        Generic Rate Limiter class for method rate limits
+    """
+    def __init__(self, limits):
+        """
+            Args:
+                limits: A list of tuples, where each tuple contains (max_requests, period_in_seconds)
+        """
+        self.limits = limits
+        self.lock = threading.Lock()
+        self.request_times = {limit: deque() for limit in self.limits}
+
+    def acquire(self):
+        # Only one thread at a time
+        with self.lock:
+            while True:
+                now = time.time()
+                allowed = True
+
+                # Go through every request and ensure rates are being followed
+                for max_requests, time_window in self.limits:
+                    q = self.request_times[(max_requests, time_window)]
+                    # Remove timestamps older than the time window
+                    while q and q[0] < now - time_window:
+                        q.popleft()
+
+                    if len(q) >= max_requests:
+                        # Rate limit has been hit, will sleep for this one and then update all rates again / continue checking
+                        allowed = False
+                        print(f"Rate limit reached for {max_requests}/{time_window}s.")
+                        raise Exception("Rate limit exceeded") 
+
+                if allowed:
+                    # If here that means got through every limit check
+                    for max_requests, time_window in self.limits:
+                        # For every limit, add this timestamp
+                        self.request_times[(max_requests, time_window)].append(now)
+                    break
 
 champ_map = {
     1: {
