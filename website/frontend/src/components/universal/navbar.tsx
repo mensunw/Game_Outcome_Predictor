@@ -56,8 +56,12 @@ export default function Navbar() {
                     </NavigationMenuList>
                 </NavigationMenu>
                 <div className="ml-auto flex gap-2">
-                    <Button variant="outline">Login</Button>
-                    <Button>Sign Up</Button>
+                    <Link href="/login">
+                        <Button variant="outline" >Login</Button>
+                    </Link>
+                    <Link href="/sign-up">
+                        <Button>Sign Up</Button>
+                    </Link>
                 </div>
             </header>
         </div>

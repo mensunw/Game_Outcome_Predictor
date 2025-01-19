@@ -1,18 +1,15 @@
 'use client'
 
-import { Card, CardTitle } from '@/components/ui/card'
+import Headline from "@/components/pages/login/Headline";
 
-const ResultPage: React.FC = () => {
+const LoginPage: React.FC = () => {
 
     return (
         <>
-            <Card>
-                <CardTitle>
-                    Login
-                </CardTitle>
-            </Card>
+            <Headline />
+
         </>
     )
 }
 
-export default ResultPage
+export default LoginPage
