@@ -62,6 +62,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",  # React's development server
     "http://ipsur.com:3000",
     "http://ipsur.com"
+    "https://ipsur.com:3000",
+    "https://ipsur.com"
 ]
 
 CORS_ALLOW_HEADERS = [
