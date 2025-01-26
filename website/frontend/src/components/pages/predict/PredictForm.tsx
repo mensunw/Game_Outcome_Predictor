@@ -42,6 +42,7 @@ export default function PredictForm() {
     // 2. Define a submit handler.
     async function onSubmit(values: z.infer<typeof formSchema>) {
         // Call backend to check and predict the outcome using the model
+        console.log("sending api call to backend", values)
         setLoading(true);
         try {
             const response = await (
