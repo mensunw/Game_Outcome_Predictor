@@ -46,7 +46,7 @@ export default function PredictForm() {
         setLoading(true);
         try {
             const response = await (
-                await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/predict/`,
+                await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/predict/`,
                     {
                         method: 'POST',
                         headers: {
