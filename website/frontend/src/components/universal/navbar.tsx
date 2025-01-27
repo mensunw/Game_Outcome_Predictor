@@ -15,7 +15,7 @@ export default function Navbar() {
                     <MountainIcon className="h-6 w-6" />
                     <span className="sr-only">Acme Inc</span>
                 </Link>
-                <NavigationMenu className="hidden lg:flex">
+                <NavigationMenu>
                     <NavigationMenuList>
                         <NavigationMenuLink asChild>
                             <Link

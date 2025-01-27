@@ -2,43 +2,44 @@ import { cn } from '@/lib/utils'
 import Marquee from '@/components/ui/marquee'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import Image from 'next/image'
 
 const reviews = [
     {
         name: 'Jack',
         username: '@jack',
         body: "I've never seen anything like this before. It's amazing. I love it.",
-        img: 'https://avatar.vercel.sh/jack',
+        img: '/jack.png',
     },
     {
         name: 'Jill',
         username: '@jill',
         body: "I don't know what to say. I'm speechless. This is amazing.",
-        img: 'https://avatar.vercel.sh/jill',
+        img: '/jill.png',
     },
     {
         name: 'John',
         username: '@john',
         body: "I'm at a loss for words. This is amazing. I love it.",
-        img: 'https://avatar.vercel.sh/john',
+        img: '/john.png',
     },
     {
         name: 'Jane',
         username: '@jane',
         body: "I'm at a loss for words. This is amazing. I love it.",
-        img: 'https://avatar.vercel.sh/jane',
+        img: '/jane.png',
     },
     {
         name: 'Jenny',
         username: '@jenny',
         body: "I'm at a loss for words. This is amazing. I love it.",
-        img: 'https://avatar.vercel.sh/jenny',
+        img: '/jenny.png',
     },
     {
         name: 'James',
         username: '@james',
         body: "I'm at a loss for words. This is amazing. I love it.",
-        img: 'https://avatar.vercel.sh/james',
+        img: '/james.png',
     },
 ]
 
@@ -82,7 +83,7 @@ const ReviewCard = ({
             onClick={handleClick} // Announces content for screen readers
         >
             <div className="flex flex-row items-center gap-2">
-                <img
+                <Image
                     className="rounded-full"
                     width="32"
                     height="32"
@@ -160,7 +161,7 @@ export default function Testimonials() {
                         Ready to take your gameplay strategy to the next level? Look no further than the Dodge Detector! With its advanced prediction capabilities, you can make informed decisions before the game even begins and dodge unfavorable matchups with ease.
                     </p>
 
-                    <Button className="mt-2"> Get Started For Free &gt </Button>
+                    <Button className="mt-2"> Get Started For Free &gt; </Button>
                 </div>
             </section>
         </Card>

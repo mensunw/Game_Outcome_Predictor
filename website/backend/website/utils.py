@@ -179,7 +179,11 @@ def get_live_features(summoner_id):
     
     # Find the everything based on the champ mapping
     for i in range(5):
-        team_cmapping = champ_map[team_champions[i]]
+        try:
+            team_cmapping = champ_map[team_champions[i]]
+        except:
+            team_cmapping = champ_map[1]
+            print("Champion not listed under champion maps, defaulted to 1")
         # ADAP ratio
         team_adap_ratio += team_cmapping["adap"][0]
         # Roles
