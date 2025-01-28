@@ -28,7 +28,7 @@ MATCH_ID_FILE = "./data/match_ids.csv" # test_ids.csv or match_ids.csv
 OVERRIDE_AND_CREATE_NEW_DATA = config.override_and_create_new_data
 
 # Knobs for grabbing data
-SAMPLE_SIZE_SCALE = 30 # X for each rank & division (X*3*4*3), (X*num_sample_ranks*divisions*num_for_each_player)
+SAMPLE_SIZE_SCALE = 10 # X for each rank & division (X*3*4*3), (X*num_sample_ranks*divisions*num_for_each_player)
 NUM_SAMPLE_FOR_EACH_PLAYER = 3 # Too much will result in data skewed based on particular player performance, Capped at 20
 
 # Filler Data if API returns NONE or WR
@@ -76,7 +76,7 @@ EXCLUDED_QUEUE_IDS = {
     # Add more queue IDs to exclude other game modes
 }
 
-UPDATED = 97
+UPDATED = 96
 
 ### FUNCTIONS
 

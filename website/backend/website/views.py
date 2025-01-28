@@ -15,8 +15,8 @@ def predict(request):
     '''
         Takes in a prediction request and either returns Rate Limit error, Player not found error, or Match not started error
     '''
-    print("within post req of predict")
     name = (request.data['username'])
+    print("Getting info for this username:", name)
 
     # Check formatting is correct for the RIOT game name and tag
     if not is_correctly_formatted(name):

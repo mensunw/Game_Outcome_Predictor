@@ -99,7 +99,7 @@ def apiCallHandler(request_url):
             raise Exception("Rate limit detected from Riot")
         elif(response.status_code == 404):
             # Data not found
-            print("Error: Data not found")
+            print("Error: Not in a live game or username does not exist")
             raise Exception("No data found")
         else:
             # Not success and not 429 API limit error

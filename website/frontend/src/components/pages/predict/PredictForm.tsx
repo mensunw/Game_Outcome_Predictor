@@ -42,7 +42,6 @@ export default function PredictForm() {
     // 2. Define a submit handler.
     async function onSubmit(values: z.infer<typeof formSchema>) {
         // Call backend to check and predict the outcome using the model
-        console.log("sending api call to backend", values)
         setLoading(true);
         try {
             const response = await (
@@ -75,7 +74,7 @@ export default function PredictForm() {
             toast({
                 variant: "destructive",
                 title: "Uh oh! Something went wrong.",
-                description: "There was a problem with your request.",
+                description: "Please contact an administrator",
             })
             console.error("Error fetching from backend:", error);
         } finally {

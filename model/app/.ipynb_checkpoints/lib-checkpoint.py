@@ -1,17 +1,16 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# IMPORTS
+### IMPORTS
 
 import time
 import threading
 from collections import deque
 
+### GLOBAL VARIABLES
 
-# GLOBAL VARIABLES
-#t
 # Rates
-MAX_REQUESTS_PER_SECOND = 20
+MAX_REQUESTS_PER_SECOND = 10
 MAX_REQUESTS_PER_2MINUTE = 100
 
 class RateLimiter_Method:
@@ -56,8 +55,6 @@ class RateLimiter_Method:
                         self.request_times[(max_requests, time_window)].append(now)
                     break
                     
-# In[ ]:
-
 # Custom RateLimiter class
 class RateLimiter:
     def __init__(self, max_calls_1, period_1, max_calls_2, period_2):

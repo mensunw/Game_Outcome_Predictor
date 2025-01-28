@@ -19,7 +19,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "Dodge Detector",
-  description: "Uses machine learning to predict the outcome of a LoL game",
+  description: "Uses machine learning to predict the outcome of a LoL game, created by Mensun Wang",
 };
 
 export default function RootLayout({
