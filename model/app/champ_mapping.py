@@ -950,7 +950,7 @@ map = {
     799: {
         "name": "Mel",
         "adap": (0.1, 0.9),
-        "roles": ["Mid", "Support", "Mage],
+        "roles": ["Mid", "Support", "Mage"],
         "cc": 2.5,
     },  
     875: {
