@@ -947,6 +947,12 @@ map = {
         "roles": ["Jungle", "Top", "Bruiser", "Assassin"],
         "cc": 2.5,
     },  
+    799: {
+        "name": "Mel",
+        "adap": (0.1, 0.9),
+        "roles": ["Mid", "Support", "Mage],
+        "cc": 2.5,
+    },  
     875: {
         "name": "Sett",
         "adap": (0.9, 0.1),
